@@ -1,0 +1,3 @@
+*    @oveo-io/engineering
+/.github/workflows/ @oveo-io/infrastructure
+/helm/ @oveo-io/infrastructure

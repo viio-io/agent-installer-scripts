@@ -31,4 +31,4 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Desktop.Agent on Windows
-        run: ./windows.install.ps1
+        run: ./windows.install.ps1 -OveoEmployeeEmail "" -OveoCustomerKey "EXAMPLE_KEY"

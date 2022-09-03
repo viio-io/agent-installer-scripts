@@ -32,3 +32,6 @@ jobs:
 
       - name: Install Desktop.Agent on Windows
         run: ./windows.install.ps1 -OveoEmployeeEmail "" -OveoCustomerKey "EXAMPLE_KEY"
+
+      #- name: Check configuration file content
+      #  run:

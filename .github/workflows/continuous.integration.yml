@@ -19,7 +19,16 @@ jobs:
         
       - name: Check configuration file content
         run: |
-          content = '{"CustomerKey":"EXAMPLE_KEY","EmployeeEmail":""}'
-          if [[ $(< /etc/oveo.conf != "$content" ]]; then
+          CONTENT='{"CustomerKey":"EXAMPLE_KEY","EmployeeEmail":""}'
+          if [[ $(< /etc/oveo.conf != "$CONTENT" ]]; then
             exit 1
           fi
+          
+  windows-install:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Desktop.Agent on Windows
+        run: ./windows.install.ps1

@@ -20,7 +20,7 @@ jobs:
       - name: Check configuration file content
         run: |
           CONTENT='{"CustomerKey":"EXAMPLE_KEY","EmployeeEmail":""}'
-          if [[ $(< /etc/oveo.conf) != "$CONTENT" ]]; then
+          if [[ $(sudo cat /etc/oveo.conf) != "$CONTENT" ]]; then
             exit 1
           fi
 

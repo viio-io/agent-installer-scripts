@@ -5,7 +5,7 @@ set -e
 # OVEO_CUSTOMER_KEY
 # OVEO_EMPLOYEE_EMAIL
 
-PKG_URL="https://cdn.oveo.io/desktop-agent/oveo-agent-1.1.3.pkg"
+PKG_URL="https://cdn.oveo.io/desktop-agent/oveo-agent-1.2.2.pkg"
 # Checksum needs to be updated when PKG_URL is updated.
 CHECKSUM="79261422843e2a333fedc83417063991facac17de1b1655a6af6e3704b148272"
 SUPPORT_EMAIL="support@oveo.io"

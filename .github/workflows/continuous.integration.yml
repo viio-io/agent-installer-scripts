@@ -1,17 +1,17 @@
----
 name: Continuous Integration Check
 
 on:
   pull_request:
-    branches: [ main ]
-    types: [ opened, synchronize, reopened, ready_for_review ]
+    branches: main
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
 jobs:
-
   macos-install:
     runs-on: macos-latest
 
     steps:
+
       - uses: actions/checkout@v3
 
       - name: Install Desktop.Agent on MacOS
@@ -28,10 +28,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
+
       - uses: actions/checkout@v3
 
       - name: Install Desktop.Agent on Windows
         run: ./windows.install.ps1 -OveoEmployeeEmail "" -OveoCustomerKey "EXAMPLE_KEY"
-
-      #- name: Check configuration file content
-      #  run:

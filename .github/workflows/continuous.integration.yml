@@ -33,3 +33,18 @@ jobs:
 
       - name: Install Desktop.Agent on Windows
         run: ./windows.install.ps1 -OveoEmployeeEmail "" -OveoCustomerKey "EXAMPLE_KEY"
+
+  ci:
+    needs: [macos-install, windows-install]
+    name: Continuous Integration Check
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+
+      - name: Report failure
+        if: needs.macos-install.result == 'failure' || needs.windows-install.result == 'failure'
+        run: exit 1
+
+      - name: Report success
+        run: exit 0

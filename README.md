@@ -16,6 +16,15 @@ Installation with specified Oveo customer key and Employee email of computer:
 OVEO_CUSTOMER_KEY="SPECIFY_CUSTOMER_KEY_HERE" OVEO_EMPLOYEE_EMAIL="SPECIFY_EMPLOYEE_EMAIL_HERE" bash -c "$(curl -L https://raw.githubusercontent.com/oveo-io/agent-installer-scripts/main/macos.install.sh)"
 ```
 
+To uninstall the agent, run the following commands:
+
+```shell
+sudo launchctl remove com.oveo.agent.metalauncher
+sudo rm /Library/LaunchDaemons/io.oveo.agent.metalauncher.plist
+sudo rm -rf /usr/local/oveo
+sudo rm /etc/oveo.conf
+```
+
 ## Windows
 
 ### Using Powershell

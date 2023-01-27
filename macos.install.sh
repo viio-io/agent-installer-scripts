@@ -2,19 +2,19 @@
 set -e
 
 # Environment variables:
-# OVEO_CUSTOMER_KEY
-# OVEO_EMPLOYEE_EMAIL
+# VIIO_CUSTOMER_KEY
+# VIIO_EMPLOYEE_EMAIL
 
-PKG_URL="https://cdn.oveo.io/desktop-agent/oveo-agent-1.2.2.pkg"
+PKG_URL="https://cdn.oveo.io/desktop-agent/viio-agent-1.3.0.pkg"
 # Checksum needs to be updated when PKG_URL is updated.
-CHECKSUM="2281e91543b96b2e74629fd129a5312d0ef428a2120f8c1b3f1a0702f4d38bdd"
-SUPPORT_EMAIL="support@oveo.io"
+CHECKSUM="82133a8868fcea781001e567e3adff87db46eb7c9372bbf3f55fa383eb46d35b"
+SUPPORT_EMAIL="support@viio.io"
 DEVELOPER_ID="Oveo ApS (895LF9A7K6)"
 CERT_SHA_FINGERPRINT="D6B409F777DC4F2D2C738EF021E40CD2286A9D8F3EA83ACFE3D2D449C53AE3A2"
-PKG_PATH="$(mktemp -d)/oveo-agent.pkg"
+PKG_PATH="$(mktemp -d)/viio-agent.pkg"
 
 ##
-# Oveo needs to be installed as root; use sudo if not already uid 0
+# Viio Agent needs to be installed as root; use sudo if not already uid 0
 ##
 if [ "$UID" = "0" ]; then
     SUDO=''
@@ -22,9 +22,9 @@ else
     SUDO='sudo -E'
 fi
 
-if [ -z "$OVEO_CUSTOMER_KEY" ]; then
+if [ -z "$VIIO_CUSTOMER_KEY" ]; then
     printf "\033[31m
-You must specify the OVEO_CUSTOMER_KEY environment variable in order to install the agent.
+You must specify the VIIO_CUSTOMER_KEY environment variable in order to install the agent.
 \n\033[0m\n"
     exit 1
 fi
@@ -32,11 +32,11 @@ fi
 
 function onerror() {
     printf "\033[31m%s
-Something went wrong while installing the Oveo Desktop Agent.
+Something went wrong while installing the Viio Desktop Agent.
 If you're having trouble installing, please send an email to %s, and we'll help you fix it!
 \n\033[0m\n" "$ERROR_MESSAGE" "$SUPPORT_EMAIL"
-    $SUDO launchctl unsetenv OVEO_CUSTOMER_KEY
-    $SUDO launchctl unsetenv OVEO_EMPLOYEE_EMAIL
+    $SUDO launchctl unsetenv VIIO_CUSTOMER_KEY
+    $SUDO launchctl unsetenv VIIO_EMPLOYEE_EMAIL
 }
 trap onerror ERR
 
@@ -44,7 +44,7 @@ trap onerror ERR
 ##
 # Download the agent
 ##
-printf "\033[34m\n* Downloading the Oveo Desktop Agent\n\033[0m"
+printf "\033[34m\n* Downloading the Viio Desktop Agent\n\033[0m"
 rm -f "$PKG_PATH"
 curl --progress-bar $PKG_URL > "$PKG_PATH"
 
@@ -86,20 +86,20 @@ fi
 ##
 # Install the agent
 ##
-printf "\033[34m\n* Installing the Oveo Desktop Agent. You might be asked for your password...\n\033[0m"
-$SUDO launchctl setenv OVEO_CUSTOMER_KEY "$OVEO_CUSTOMER_KEY"
-$SUDO launchctl setenv OVEO_EMPLOYEE_EMAIL "$OVEO_EMPLOYEE_EMAIL"
+printf "\033[34m\n* Installing the Viio Desktop Agent. You might be asked for your password...\n\033[0m"
+$SUDO launchctl setenv VIIO_CUSTOMER_KEY "$VIIO_CUSTOMER_KEY"
+$SUDO launchctl setenv VIIO_EMPLOYEE_EMAIL "$VIIO_EMPLOYEE_EMAIL"
 $SUDO /usr/sbin/installer -pkg "$PKG_PATH" -target / >/dev/null
-$SUDO launchctl unsetenv OVEO_CUSTOMER_KEY
-$SUDO launchctl unsetenv OVEO_EMPLOYEE_EMAIL
+$SUDO launchctl unsetenv VIIO_CUSTOMER_KEY
+$SUDO launchctl unsetenv VIIO_EMPLOYEE_EMAIL
 rm -f "$PKG_PATH"
 
 ##
 # check if the agent is running
 ##
-if launchctl print system/com.oveo.agent.metalauncher | grep -q "state = running"; then
-    printf "\033[32mYour Agent is running properly. It will continue to run in the background and submit data to Oveo.\033[0m"
+if launchctl print system/io.viio.agent.metalauncher | grep -q "state = running"; then
+    printf "\033[32mYour Agent is running properly. It will continue to run in the background and submit data to Viio.\033[0m"
 else
-    printf "\033[31m The Oveo Desktop Agent is not running after installation. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
+    printf "\033[31m The Viio Desktop Agent is not running after installation. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
     exit 1
 fi

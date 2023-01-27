@@ -15,12 +15,12 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Desktop.Agent on MacOS
-        run: OVEO_CUSTOMER_KEY="EXAMPLE_KEY" ./macos.install.sh
+        run: VIIO_CUSTOMER_KEY="EXAMPLE_KEY" VIIO_EMPLOYEE_EMAIL="user@test.com" ./macos.install.sh
 
       - name: Check configuration file content
         run: |
-          CONTENT='{"CustomerKey":"EXAMPLE_KEY","EmployeeEmail":""}'
-          if [[ $(sudo cat /etc/oveo.conf) != "$CONTENT" ]]; then
+          CONTENT='{"CustomerKey":"EXAMPLE_KEY","EmployeeEmail":"user@test.com"}'
+          if [[ $(sudo cat /etc/viio.conf) != "$CONTENT" ]]; then
             exit 1
           fi
 
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Desktop.Agent on Windows
-        run: ./windows.install.ps1 -OveoEmployeeEmail "" -OveoCustomerKey "EXAMPLE_KEY"
+        run: ./windows.install.ps1 -EmployeeEmail "" -CustomerKey "EXAMPLE_KEY"
 
   ci:
     needs: [macos-install, windows-install]

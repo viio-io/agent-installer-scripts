@@ -1,37 +1,37 @@
 param(
   [Parameter(Mandatory = $true)]
-  [string]$OveoCustomerKey,
+  [string]$CustomerKey,
 
   [Parameter()]
-  [string]$OveoEmployeeEmail = "null"
+  [string]$EmployeeEmail = "null"
 )
 
-$SUPPORT_EMAIL = "support@oveo.io"
+$SUPPORT_EMAIL = "support@viio.io"
 
-Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Oveo+Desktop+Agent+Installer+1.2.1.msi" -OutFile "./oveo-agent-installer.msi"
+Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Oveo+Desktop+Agent+Installer+1.2.1.msi" -OutFile "./viio-agent-installer.msi"
 
 $MSIArguments = @(
   "/i"
-  "oveo-agent-installer.msi"
-  "OVEO_CUSTOMER_KEY=$OveoCustomerKey"
-  "OVEO_EMPLOYEE_EMAIL=$OveoEmployeeEmail"
+  "viio-agent-installer.msi"
+  "OVEO_CUSTOMER_KEY=$CustomerKey"
+  "OVEO_EMPLOYEE_EMAIL=$EmployeeEmail"
   "/qn"
   "/passive"
   "/norestart"
   "/l*v"
-  "oveo.log"
+  "viio.log"
 )
 
 Start-Process "msiexec" -ArgumentList $MSIArguments -Wait -NoNewWindow
 
-Remove-Item "./oveo-agent-installer.msi"
+Remove-Item "./viio-agent-installer.msi"
 
 $ServiceStatus = (Get-Service -Name OveoDesktopAgent).Status
 if ($ServiceStatus -eq "Running") {
-  Write-Output "Your Agent is running properly. It will continue to run in the background and submit data to Oveo."
-  Remove-Item "./oveo.log"
+  Write-Output "Your Agent is running properly. It will continue to run in the background and submit data to Viio."
+  Remove-Item "./viio.log"
 }
 else {
-  Write-Output "The Oveo Desktop Agent is not running after installation. Please contact $SUPPORT_EMAIL and send the oveo.log file for more information."
+  Write-Output "The Viio Desktop Agent is not running after installation. Please contact $SUPPORT_EMAIL and send the viio.log file for more information."
   exit 1
 }

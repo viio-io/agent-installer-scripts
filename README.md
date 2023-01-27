@@ -1,41 +1,41 @@
-# Oveo Agent Installer Scripts
+# Viio Agent Installer Scripts
 
-Scripts to install Oveo Desktop Agent
+Scripts to install the Viio Desktop Agent
 
 ## MacOS
 
-Installation with specified Oveo customer key:
+Installation with specified Viio customer key:
 
 ```sh
-OVEO_CUSTOMER_KEY="SPECIFY_CUSTOMER_KEY_HERE" bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.install.sh)"
+VIIO_CUSTOMER_KEY="SPECIFY_CUSTOMER_KEY_HERE" bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.install.sh)"
 ```
 
-Installation with specified Oveo customer key and Employee email of computer:
+Installation with specified Viio customer key and Employee email of computer:
 
 ```sh
-OVEO_CUSTOMER_KEY="SPECIFY_CUSTOMER_KEY_HERE" OVEO_EMPLOYEE_EMAIL="SPECIFY_EMPLOYEE_EMAIL_HERE" bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.install.sh)"
+VIIO_CUSTOMER_KEY="SPECIFY_CUSTOMER_KEY_HERE" VIIO_EMPLOYEE_EMAIL="SPECIFY_EMPLOYEE_EMAIL_HERE" bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.install.sh)"
 ```
 
 To uninstall the agent, run the following commands:
 
 ```shell
-sudo launchctl remove com.oveo.agent.metalauncher
-sudo rm /Library/LaunchDaemons/io.oveo.agent.metalauncher.plist
-sudo rm -rf /usr/local/oveo
-sudo rm /etc/oveo.conf
+sudo launchctl remove io.viio.agent.metalauncher
+sudo rm /Library/LaunchDaemons/io.viio.agent.metalauncher.plist
+sudo rm -rf /usr/local/viio
+sudo rm /etc/viio.conf
 ```
 
 ## Windows
 
 ### Using Powershell
 
-Installation with specified Oveo customer key:
+Installation with specified Viio customer key:
 
 ```powerhsell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.install.ps1'))).Invoke("SPECIFY_CUSTOMER_KEY_HERE")
 ```
 
-Installation with specified Oveo customer key and Employee email of computer:
+Installation with specified Viio customer key and Employee email of computer:
 
 ```powerhsell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.install.ps1'))).Invoke("SPECIFY_CUSTOMER_KEY_HERE", "SPECIFY_EMPLOYEE_EMAIL_HERE")
@@ -43,8 +43,8 @@ Installation with specified Oveo customer key and Employee email of computer:
 
 ## Using cmd
 
-Some MDM solutions doesn't not allow to execute powershell scripts or fresh Windows 10 install can have strict policy for executing powershell scripts.
-In that case the cmd script can be used:
+Some MDM solutions do not allow executing PowerShell scripts or fresh Windows 10 install can have a strict policy for executing PowerShell scripts.
+In that case, the cmd script can be used:
 
 ```cmd
 @echo off

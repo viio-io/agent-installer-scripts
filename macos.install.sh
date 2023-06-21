@@ -12,6 +12,7 @@ SUPPORT_EMAIL="support@viio.io"
 DEVELOPER_ID="Oveo ApS (895LF9A7K6)"
 CERT_SHA_FINGERPRINT="D6B409F777DC4F2D2C738EF021E40CD2286A9D8F3EA83ACFE3D2D449C53AE3A2"
 PKG_PATH="$(mktemp -d)/viio-agent.pkg"
+VIIO_CONF_PATH="/etc/viio.conf"
 
 ##
 # Viio Agent needs to be installed as root; use sudo if not already uid 0
@@ -35,8 +36,6 @@ function onerror() {
 Something went wrong while installing the Viio Desktop Agent.
 If you're having trouble installing, please send an email to %s, and we'll help you fix it!
 \n\033[0m\n" "$ERROR_MESSAGE" "$SUPPORT_EMAIL"
-    $SUDO launchctl unsetenv VIIO_CUSTOMER_KEY
-    $SUDO launchctl unsetenv VIIO_EMPLOYEE_EMAIL
 }
 trap onerror ERR
 
@@ -87,11 +86,14 @@ fi
 # Install the agent
 ##
 printf "\033[34m\n* Installing the Viio Desktop Agent. You might be asked for your password...\n\033[0m"
-$SUDO launchctl setenv VIIO_CUSTOMER_KEY "$VIIO_CUSTOMER_KEY"
-$SUDO launchctl setenv VIIO_EMPLOYEE_EMAIL "$VIIO_EMPLOYEE_EMAIL"
+
+CONFIG="{\"CustomerKey\":\"$VIIO_CUSTOMER_KEY\",\"EmployeeEmail\":\"$VIIO_EMPLOYEE_EMAIL\"}"
+echo "$CONFIG" | $SUDO tee "$VIIO_CONF_PATH" > /dev/null
+$SUDO /bin/chmod 400 "$VIIO_CONF_PATH"
+$SUDO /usr/sbin/chown root:wheel "$VIIO_CONF_PATH"
+
 $SUDO /usr/sbin/installer -pkg "$PKG_PATH" -target / >/dev/null
-$SUDO launchctl unsetenv VIIO_CUSTOMER_KEY
-$SUDO launchctl unsetenv VIIO_EMPLOYEE_EMAIL
+
 rm -f "$PKG_PATH"
 
 ##

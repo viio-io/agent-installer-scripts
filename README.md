@@ -63,7 +63,7 @@ ENDLOCAL
 ## Version update
 
 To update agent version you sould:
-* Set new version for [Windows](https://github.com/viio-io/agent-installer-scripts/blob/main/windows.install.ps1#L11).
-* Set new version for [MacOS](https://github.com/viio-io/agent-installer-scripts/blob/main/macos.install.sh#L8).
-* Set new hash for [MacOS](https://github.com/viio-io/agent-installer-scripts/blob/main/macos.install.sh#L10).
+* Set new version for [Windows](https://github.com/viio-io/agent-installer-scripts/blob/main/windows.install.ps1#L11)
+* Set new version for [MacOS](https://github.com/viio-io/agent-installer-scripts/blob/main/macos.install.sh#L8)
+* Set new hash for [MacOS](https://github.com/viio-io/agent-installer-scripts/blob/main/macos.install.sh#L10)
 	* Hash is calculated during [MacOS installer publish workflow](https://github.com/viio-io/desktop-agent/actions/workflows/publish-macos-installer.yml)

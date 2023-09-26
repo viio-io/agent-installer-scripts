@@ -8,7 +8,7 @@ param(
 
 $SUPPORT_EMAIL = "support@viio.io"
 
-Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Oveo+Desktop+Agent+Installer+1.2.1.msi" -OutFile "./viio-agent-installer.msi"
+Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Viio_Desktop_Agent_Installer_1.4.0.msi" -OutFile "./viio-agent-installer.msi"
 
 $MSIArguments = @(
   "/i"
@@ -26,7 +26,7 @@ Start-Process "msiexec" -ArgumentList $MSIArguments -Wait -NoNewWindow
 
 Remove-Item "./viio-agent-installer.msi"
 
-$ServiceStatus = (Get-Service -Name OveoDesktopAgent).Status
+$ServiceStatus = (Get-Service -Name ViioDesktopAgent).Status
 if ($ServiceStatus -eq "Running") {
   Write-Output "Your Agent is running properly. It will continue to run in the background and submit data to Viio."
   Remove-Item "./viio.log"

@@ -13,8 +13,8 @@ Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Viio_Desktop_Agent_Ins
 $MSIArguments = @(
   "/i"
   "viio-agent-installer.msi"
-  "OVEO_CUSTOMER_KEY=$CustomerKey"
-  "OVEO_EMPLOYEE_EMAIL=$EmployeeEmail"
+  "VIIO_CUSTOMER_KEY=$CustomerKey"
+  "VIIO_EMPLOYEE_EMAIL=$EmployeeEmail"
   "/qn"
   "/passive"
   "/norestart"

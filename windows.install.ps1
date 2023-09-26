@@ -26,7 +26,7 @@ Start-Process "msiexec" -ArgumentList $MSIArguments -Wait -NoNewWindow
 
 Remove-Item "./viio-agent-installer.msi"
 
-$ServiceStatus = (Get-Service -Name OveoDesktopAgent).Status
+$ServiceStatus = (Get-Service -Name ViioDesktopAgent).Status
 if ($ServiceStatus -eq "Running") {
   Write-Output "Your Agent is running properly. It will continue to run in the background and submit data to Viio."
   Remove-Item "./viio.log"

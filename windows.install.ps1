@@ -8,7 +8,7 @@ param(
 
 $SUPPORT_EMAIL = "support@viio.io"
 
-Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Viio_Desktop_Agent_Installer_1.4.0.msi" -OutFile "./viio-agent-installer.msi"
+Invoke-WebRequest -Uri "https://cdn.oveo.io/desktop-agent/Viio_Desktop_Agent_Installer_1.4.1.msi" -OutFile "./viio-agent-installer.msi"
 
 $MSIArguments = @(
   "/i"

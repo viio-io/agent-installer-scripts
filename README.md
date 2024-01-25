@@ -64,8 +64,18 @@ To check Agent installation we prepare `*.troubleshooting` script for each suppo
 
 Run script `macos.troubleshooting.sh` with `sudo` and check console output.
 
-To share it with Viio dev team please save standard output and error into file using `&>` for redirection:
+To share it with Viio dev team please save standard and error outputs into file using `&>` for redirection:
 
 ```bash
 sudo ./macos.troubleshooting.sh &> result.txt
+```
+
+### Windows script
+
+Run script `windows.troubleshooting.ps1` in PowerShell opened with Administrator privileges and check console output.
+
+To share it with Viio dev team please save standard and error outputs into file using `*>` for redirection:
+
+```powershell
+./windows.troubleshooting.ps1 *> result.txt
 ```

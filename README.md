@@ -31,13 +31,13 @@ sudo rm /etc/viio.conf
 
 Installation with specified Viio customer key:
 
-```powerhsell
+```powershell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.install.ps1'))).Invoke("SPECIFY_CUSTOMER_KEY_HERE")
 ```
 
 Installation with specified Viio customer key and Employee email of computer:
 
-```powerhsell
+```powershell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.install.ps1'))).Invoke("SPECIFY_CUSTOMER_KEY_HERE", "SPECIFY_EMPLOYEE_EMAIL_HERE")
 ```
 
@@ -79,5 +79,5 @@ Run script `windows.troubleshooting.ps1` in PowerShell opened with Administrator
 To share it with Viio dev team please save standard and error outputs into file using `*>` for redirection:
 
 ```powershell
-./windows.troubleshooting.ps1 *> result.txt
+([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.troubleshooting.ps1'))).Invoke() *> "result.txt"
 ```

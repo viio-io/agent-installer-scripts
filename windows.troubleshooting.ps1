@@ -69,6 +69,23 @@ function Get-DirectoryFilesInfo {
     }
 }
 
+# Function to print version of executable
+function Get-FileVersionInfo {
+    param (
+        [string]$filePath
+    )
+
+    Write-Host ""
+    if (Test-Path -Path $filePath) {
+        $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($filePath)
+
+        Write-Host "File Version for '$filePath': $($fileVersionInfo.FileVersion)"
+        Write-Host "Product Version for '$filePath': $($fileVersionInfo.ProductVersion)"
+    } else {
+        Write-Host "File not found: $filePath" -ForegroundColor Red
+    }
+}
+
 # Function to read and print the content of a specified file
 function Get-FileContent {
     param (
@@ -81,6 +98,24 @@ function Get-FileContent {
         Get-Content -Path $filePath
     } else {
         Write-Host "File not found: $filePath" -ForegroundColor Red
+    }
+}
+
+# Function to print content of last modified file
+function Get-LatestFileContent {
+    param (
+        [string]$folderPath
+    )
+
+    # Get all files in the folder, sorted by LastWriteTime
+    $latestFile = Get-ChildItem -Path $folderPath -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+
+    Write-Host ""
+    if ($latestFile) {
+        Write-Host "Displaying content of the latest file: $($latestFile.FullName)"
+        Get-Content -Path $latestFile.FullName
+    } else {
+        Write-Host "Files in folder $folderPath are not found" -ForegroundColor Red
     }
 }
 
@@ -110,6 +145,33 @@ function Test-ServiceApiAvailability {
     }
 }
 
+# Function to get service log from standard service loggin mechanism
+function Get-ServiceLogMessages {
+    param (
+        [string]$serviceName,
+        [int]$numberOfEntries = 10 # Default to the last 10 entries
+    )
+
+    Write-Host ""
+    try {
+        Write-Host "Getting event log entries for service: $serviceName"
+
+        # Check if there are any entries for the given source
+        $exists = Get-EventLog -LogName System -Source $serviceName -Newest 1 -ErrorAction SilentlyContinue
+        if ($exists) {
+            # Fetching entries
+            $logEntries = Get-EventLog -LogName System -Source $serviceName -Newest $numberOfEntries
+            foreach ($entry in $logEntries) {
+                Write-Host ("[" + $entry.TimeWritten + "] " + $entry.EntryType + ": " + $entry.Message)
+            }
+        } else {
+            Write-Host "No log entries found for service: $serviceName"
+        }
+    } catch {
+        Write-Host "Error retrieving log entries: $_" -ForegroundColor Red
+    }
+}
+
 # Function to get device id
 function Get-DeviceUUID {
     $computerSystemProduct = Get-WmiObject -Class Win32_ComputerSystemProduct
@@ -134,6 +196,9 @@ Confirm-ServiceInstalled -serviceName $SERVICE_NAME
 
 # Print all files in service installation folder
 $folderOfServiceExecutable = Get-ServiceExecutablePath -serviceName $SERVICE_NAME
+
+Get-FileVersionInfo -filePath (Join-Path $folderOfServiceExecutable "DesktopAgent.Windows.exe")
+
 Get-DirectoryFilesInfo -directoryPath $folderOfServiceExecutable
 
 Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "appsettings.json")
@@ -141,14 +206,20 @@ Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "appsettings-aft
 Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "info.json")
 Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "config.json")
 
-# Check APIs accessibility
-Test-ServiceApiAvailability -url "https://api.viio.io/employee-management/v1/employees/email/test@example.com"
-Test-ServiceApiAvailability -url "https://api.viio.io/desktop/v1/settings/windows" 
+# Print latest log file
+Get-LatestFileContent -folderPath (Join-Path $folderOfServiceExecutable "logs")
 
 ## Device ID
 Get-DeviceUUID
 
-## File attribute with Version
+# Get OS standart service log messages
+Get-ServiceLogMessages -serviceName $SERVICE_NAME
 
+# Check APIs accessibility
+Test-ServiceApiAvailability -url "https://api.viio.io/employee-management/v1/employees/email/test@example.com"
+Test-ServiceApiAvailability -url "https://api.viio.io/desktop/v1/settings/windows"
+
+Write-Host ""
+Write-Host "** SCRIPT EXECUTION DONE **"
 # Ensures no value is returned in the end
 return

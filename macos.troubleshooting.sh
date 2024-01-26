@@ -41,8 +41,16 @@ check_daemon_status() {
 check_url_accessibility() {
     echo ""
     local url=$1
-    if curl --output /dev/null --silent --get --fail "$url"; then
+    local response=$(curl --silent --fail "$url")
+
+    if [ $? -eq 0 ]; then
         echo "URL $url is accessible."
+        if [ -z "$response" ]; then
+            echo "Response content is empty."
+        else
+            echo "Response content:"
+            echo "$response"
+        fi
     else
         echo "URL $url is not accessible."
     fi
@@ -58,23 +66,6 @@ list_files_in_directory() {
         ls -l "$install_folder"
     else
         echo "Directory $install_folder does not exist."
-    fi
-}
-
-# Function to check if an environment variable is provided
-check_env_variable() {
-    local var_name=$1
-
-    # Using indirect variable reference to get the value of the variable with name in var_name
-    local var_value=${!var_name}
-
-    echo ""
-    if [ -z "$var_value" ]; then
-        echo "Environment variable '$var_name' is not set or is empty."
-        return 1
-    else
-        echo "Environment variable '$var_name' is set to '$var_value'."
-        return 0
     fi
 }
 
@@ -106,6 +97,19 @@ get_service_logs() {
     log show --predicate "(subsystem == '$service_name' OR process == '$service_name')" --info --last $time_span --debug
 }
 
+# Function to generate DeviceID combining System Drive Serial Number and Platform Serial Number
+print_device_id() {
+    echo ""
+
+    local system_drive_serial=$(system_profiler SPSerialATADataType | sed -En 's/.*Serial Number: ([\\d\\w]*)//p')
+
+    echo "System drive serial number: $system_drive_serial"
+
+    local platform_serial=$(ioreg -l | grep IOPlatformSerialNumber | sed 's/.*= //' | sed 's/\"//g')
+
+    echo "Platform serial number: $platform_serial"
+}
+
 ### MAIN
 
 # Check if the service is installed
@@ -115,16 +119,11 @@ check_service_installed
 check_daemon_status
 
 # Check APIs accessibility
-check_url_accessibility "https://api.viio.io/employee-management/v1/employees/email/test@mail.com"
-check_url_accessibility "https://api.viio.io/desktop/v1/settings/test"
+check_url_accessibility "https://api.viio.io/employee-management/v1/employees/email/test@example.com"
+check_url_accessibility "https://api.viio.io/desktop/v1/settings/macos"
 
 # List all files in the installation directory
 list_files_in_directory "/usr/local/viio"
-
-# Check globally set env variables
-check_env_variable "VIIO_CUSTOMER_KEY"
-check_env_variable "VIIO_EMPLOYEE_EMAIL"
-check_env_variable "VIIO_INSTALLER_USER"
 
 # Print some config files
 print_file_content "/etc/viio.conf"
@@ -135,3 +134,9 @@ print_file_content "/usr/local/viio/info.json"
 
 # Getting logs from operating system
 get_service_logs $SERVICE_NAME
+
+# Print Device Id parts
+print_device_id
+
+echo ""
+echo "** SCRIPT EXECUTION DONE **"

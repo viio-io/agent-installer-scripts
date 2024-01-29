@@ -44,9 +44,13 @@ check_daemon_status() {
 check_url_accessibility() {
     echo ""
     local url=$1
-    local response=$(curl --silent --fail "$url")
+    local response
 
-    if [ $? -eq 0 ]; then
+    # Execute curl and capture response; also store the exit status
+    response=$(curl --silent --fail "$url")
+    local status=$?
+
+    if [ $status -eq 0 ]; then  # Curl command was successful
         echo "URL $url is accessible."
         if [ -z "$response" ]; then
             echo "Response content is empty."
@@ -97,19 +101,20 @@ get_service_logs() {
 
     # Using the log command to filter logs based on the service name
     # Adjust the predicate according to your service's logging subsystem or other criteria
-    $SUDO log show --predicate "(subsystem == '$service_name' OR process == '$service_name')" --info --last $time_span --debug
+    $SUDO log show --predicate "(subsystem == '$service_name' OR process == '$service_name')" --info --last "$time_span" --debug
 }
 
 # Function to generate DeviceID combining System Drive Serial Number and Platform Serial Number
 print_device_id() {
     echo ""
 
-    local system_drive_serial=$(system_profiler SPSerialATADataType | sed -En 's/.*Serial Number: ([\\d\\w]*)//p')
+    local system_drive_serial
+    local platform_serial
+
+    system_drive_serial=$(system_profiler SPSerialATADataType | sed -En 's/.*Serial Number: ([\\d\\w]*)//p')
+    platform_serial=$(ioreg -l | grep IOPlatformSerialNumber | sed 's/.*= //' | sed 's/\"//g')
 
     echo "System drive serial number: $system_drive_serial"
-
-    local platform_serial=$(ioreg -l | grep IOPlatformSerialNumber | sed 's/.*= //' | sed 's/\"//g')
-
     echo "Platform serial number: $platform_serial"
 }
 

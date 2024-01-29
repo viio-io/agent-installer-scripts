@@ -124,7 +124,7 @@ function Test-ServiceApiAvailability {
 
             # Check if response content is not empty
             if ([string]::IsNullOrWhiteSpace($response.Content)) {
-                Write-Warning "Response content is empty."
+                Write-Warning "Response content is empty of url: $url."
             } else {
                 Write-Output "Response Content: $($response.Content)"
             }

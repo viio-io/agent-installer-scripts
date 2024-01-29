@@ -62,19 +62,25 @@ To check Agent installation we prepare `*.troubleshooting` script for each suppo
 
 ### MacOS script
 
-Run script `macos.troubleshooting.sh` with `sudo` and check console output.
-
-To share it with Viio dev team please save standard and error outputs into file using `&>` for redirection:
+Run script `macos.troubleshooting.sh` and check console output:
 
 ```sh
-curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh -o macos.troubleshooting.sh
+bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh)"
+```
 
-sudo bash macos.troubleshooting.sh &> result.txt
+To share output with Viio dev team please save standard and error outputs into file using `&>` for redirection:
+
+```sh
+bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh)" &> result.txt
 ```
 
 ### Windows script
 
-Run script `windows.troubleshooting.ps1` in PowerShell opened with Administrator privileges and check console output.
+Run script `windows.troubleshooting.ps1` in PowerShell opened with Administrator privileges and check console output:
+
+```powershell
+([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.troubleshooting.ps1'))).Invoke()
+```
 
 To share it with Viio dev team please save standard and error outputs into file using `*>` for redirection:
 

@@ -1,7 +1,7 @@
 # Service name (replace with your specific service name)
 $SERVICE_NAME = "ViioDesktopAgent"
 
-function Test-AdminPrivileges {
+function Test-AdminPrivilege {
     $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
     $windowsPrincipal = New-Object Security.Principal.WindowsPrincipal($currentUser)
     $adminRole = [Security.Principal.WindowsBuiltInRole]::Administrator
@@ -15,17 +15,15 @@ function Confirm-ServiceInstalled {
         [string]$serviceName
     )
 
-    Write-Host "Checking if $serviceName is installed..."
-    
+    Write-Output "Checking if $serviceName is installed..."
+
     $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
     if ($service) {
-        Write-Host "$serviceName is installed."
-        Write-Host ""
-        Write-Host "Service Status: $($service.Status)"
-        Write-Host ""
-        Write-Host "Startup Type: $(Get-WmiObject -Class Win32_Service -Filter "Name='$serviceName'").StartMode"
+        Write-Output "$serviceName is installed."
+        Write-Output "`nService Status: $($service.Status)"
+        Write-Output "`nStartup Type: $(Get-CimInstance -ClassName Win32_Service -Filter "Name='$serviceName'")"
     } else {
-        Write-Host "$serviceName is not installed."
+        Write-Output "$serviceName is not installed."
     }
 }
 
@@ -36,7 +34,7 @@ function Get-ServiceExecutablePath {
     )
 
     # Get the service object
-    $service = Get-WmiObject -Class Win32_Service -Filter "Name='$serviceName'"
+    $service = Get-CimInstance -ClassName Win32_Service -Filter "Name='$serviceName'"
 
     if ($service) {
         # Extract the executable path from the service's executable path
@@ -44,12 +42,10 @@ function Get-ServiceExecutablePath {
         $executablePath = $service.PathName -replace '^"(.+)"$', '$1'
         $serviceFolderPath = [System.IO.Path]::GetDirectoryName($executablePath)
 
-        Write-Host "Executable Path for Service '$serviceName': $executablePath"
-
-        # Return the folder path
+        # Explicitly return the folder path
         return $serviceFolderPath
     } else {
-        Write-Host "Service '$serviceName' is not installed on this system."
+        Write-Error "`nService '$serviceName' is not installed on this system."
         return $null
     }
 }
@@ -60,12 +56,11 @@ function Get-DirectoryFilesInfo {
         [string]$directoryPath
     )
 
-    Write-Host ""
     if (Test-Path -Path $directoryPath) {
-        Write-Host "Files in the directory ($directoryPath):"
+        Write-Output "`nFiles in the directory ($directoryPath):"
         Get-ChildItem -Path "$directoryPath" -File | Select-Object Name, Length, CreationTime, LastWriteTime | Format-List
     } else {
-        Write-Host "Directory not found: $directoryPath" -ForegroundColor Red
+        Write-Warning "`nDirectory not found: $directoryPath"
     }
 }
 
@@ -75,14 +70,13 @@ function Get-FileVersionInfo {
         [string]$filePath
     )
 
-    Write-Host ""
     if (Test-Path -Path $filePath) {
         $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($filePath)
 
-        Write-Host "File Version for '$filePath': $($fileVersionInfo.FileVersion)"
-        Write-Host "Product Version for '$filePath': $($fileVersionInfo.ProductVersion)"
+        Write-Output "`nFile Version for '$filePath': $($fileVersionInfo.FileVersion)"
+        Write-Output "Product Version for '$filePath': $($fileVersionInfo.ProductVersion)"
     } else {
-        Write-Host "File not found: $filePath" -ForegroundColor Red
+        Write-Warning "`nFile not found: $filePath"
     }
 }
 
@@ -92,12 +86,11 @@ function Get-FileContent {
         [string]$filePath
     )
 
-    Write-Host ""
     if (Test-Path $filePath) {
-        Write-Host "Content of the file ($filePath):" -ForegroundColor Green
+        Write-Output "`nContent of the file ($filePath):"
         Get-Content -Path $filePath
     } else {
-        Write-Host "File not found: $filePath" -ForegroundColor Red
+        Write-Warning "`nFile not found: $filePath"
     }
 }
 
@@ -110,12 +103,11 @@ function Get-LatestFileContent {
     # Get all files in the folder, sorted by LastWriteTime
     $latestFile = Get-ChildItem -Path $folderPath -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 
-    Write-Host ""
     if ($latestFile) {
-        Write-Host "Displaying content of the latest file: $($latestFile.FullName)"
+        Write-Output "`nDisplaying content of the latest file: $($latestFile.FullName)"
         Get-Content -Path $latestFile.FullName
     } else {
-        Write-Host "Files in folder $folderPath are not found" -ForegroundColor Red
+        Write-Warning "`nFiles in folder $folderPath are not found"
     }
 }
 
@@ -125,36 +117,34 @@ function Test-ServiceApiAvailability {
         [string]$url
     )
 
-    Write-Host ""
     try {
         $response = Invoke-WebRequest -Uri $url -Method 'GET' -UseBasicParsing
         if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
-            Write-Host "API at $url is available. Status Code: $($response.StatusCode)" -ForegroundColor Green
+            Write-Output "`nAPI at $url is available. Status Code: $($response.StatusCode)"
 
             # Check if response content is not empty
             if ([string]::IsNullOrWhiteSpace($response.Content)) {
-                Write-Host "Response content is empty." -ForegroundColor Cyan
+                Write-Warning "Response content is empty."
             } else {
-                Write-Host "Response Content: $($response.Content)" -ForegroundColor Cyan
+                Write-Output "Response Content: $($response.Content)"
             }
         } else {
-            Write-Host "API at $url responded, but with a non-successful status code: $($response.StatusCode)" -ForegroundColor Yellow
+            Write-Warning "`nAPI at $url responded, but with a non-successful status code: $($response.StatusCode)"
         }
     } catch {
-        Write-Host "API at $url is not available. Error: $_" -ForegroundColor Red
+        Write-Warning "`nAPI at $url is not available. Error: $_"
     }
 }
 
 # Function to get service log from standard service loggin mechanism
-function Get-ServiceLogMessages {
+function Get-ServiceLog {
     param (
         [string]$serviceName,
         [int]$numberOfEntries = 10 # Default to the last 10 entries
     )
 
-    Write-Host ""
     try {
-        Write-Host "Getting event log entries for service: $serviceName"
+        Write-Output "`nGetting event log entries for service: $serviceName"
 
         # Check if there are any entries for the given source
         $exists = Get-EventLog -LogName System -Source $serviceName -Newest 1 -ErrorAction SilentlyContinue
@@ -162,33 +152,31 @@ function Get-ServiceLogMessages {
             # Fetching entries
             $logEntries = Get-EventLog -LogName System -Source $serviceName -Newest $numberOfEntries
             foreach ($entry in $logEntries) {
-                Write-Host ("[" + $entry.TimeWritten + "] " + $entry.EntryType + ": " + $entry.Message)
+                Write-Output ("[" + $entry.TimeWritten + "] " + $entry.EntryType + ": " + $entry.Message)
             }
         } else {
-            Write-Host "No log entries found for service: $serviceName"
+            Write-Output "No log entries found for service: $serviceName"
         }
     } catch {
-        Write-Host "Error retrieving log entries: $_" -ForegroundColor Red
+        Write-Warning "`nError retrieving log entries: $_"
     }
 }
 
 # Function to get device id
 function Get-DeviceUUID {
-    $computerSystemProduct = Get-WmiObject -Class Win32_ComputerSystemProduct
+    $computerSystemProduct = Get-CimInstance -ClassName Win32_ComputerSystemProduct
     $uuid = $computerSystemProduct.UUID
 
-    Write-Host ""
-    Write-Host "Device UUID: $uuid"
+    Write-Output "`nDevice UUID: $uuid"
 
-    # Get Machine Name
-    Write-Host "Machine Name: $env:COMPUTERNAME"
+    Write-Output "Machine Name: $env:COMPUTERNAME"
 }
 
 # MAINs
 
 # Check if running as Administrator
-if (-not (Test-AdminPrivileges)) {
-    Write-Host "This script is better to run as an Administrator." -ForegroundColor Red
+if (-not (Test-AdminPrivilege)) {
+    Write-Warning "This script is better to run as an Administrator."
 }
 
 # Check if the service is installed and its status
@@ -196,6 +184,8 @@ Confirm-ServiceInstalled -serviceName $SERVICE_NAME
 
 # Print all files in service installation folder
 $folderOfServiceExecutable = Get-ServiceExecutablePath -serviceName $SERVICE_NAME
+
+Write-Output "`nExecutable Path for Service '$SERVICE_NAME': $folderOfServiceExecutable"
 
 Get-FileVersionInfo -filePath (Join-Path $folderOfServiceExecutable "DesktopAgent.Windows.exe")
 
@@ -213,13 +203,12 @@ Get-LatestFileContent -folderPath (Join-Path $folderOfServiceExecutable "logs")
 Get-DeviceUUID
 
 # Get OS standart service log messages
-Get-ServiceLogMessages -serviceName $SERVICE_NAME
+Get-ServiceLog -serviceName $SERVICE_NAME
 
 # Check APIs accessibility
 Test-ServiceApiAvailability -url "https://api.viio.io/employee-management/v1/employees/email/test@example.com"
 Test-ServiceApiAvailability -url "https://api.viio.io/desktop/v1/settings/windows"
 
-Write-Host ""
-Write-Host "** SCRIPT EXECUTION DONE **"
+Write-Output "`n** SCRIPT EXECUTION DONE **"
 # Ensures no value is returned in the end
 return

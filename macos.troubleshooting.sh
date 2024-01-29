@@ -3,10 +3,13 @@
 # Service name (you should replace this with your specific service name)
 SERVICE_NAME="io.viio.agent.metalauncher"
 
-# Check if the script is running with sudo
-if [ "$(id -u)" != "0" ]; then
-    echo "This script must be run as root. Please use sudo."
-    exit 1
+##
+# Script needs to be run as root; use sudo if not already uid 0
+##
+if [ "$UID" = "0" ]; then
+    SUDO=''
+else
+    SUDO='sudo -E'
 fi
 
 # Function to check if the service is installed and print the directory
@@ -26,7 +29,7 @@ check_service_installed() {
 check_daemon_status() {
     echo ""
     echo "Checking if $SERVICE_NAME is running..."
-    if launchctl list | grep -q $SERVICE_NAME; then
+    if $SUDO launchctl list | grep -q $SERVICE_NAME; then
         echo "$SERVICE_NAME is running."
     else
         echo "$SERVICE_NAME is not running."
@@ -34,7 +37,7 @@ check_daemon_status() {
 
     echo ""
     echo "Service status:"
-    launchctl list | grep $SERVICE_NAME
+    $SUDO launchctl list | grep $SERVICE_NAME
 }
 
 # Function to check if a URL is accessible
@@ -63,7 +66,7 @@ list_files_in_directory() {
     echo ""
     if [ -d "$install_folder" ]; then
         echo "Listing files in $install_folder:"
-        ls -l "$install_folder"
+        $SUDO ls -l "$install_folder"
     else
         echo "Directory $install_folder does not exist."
     fi
@@ -77,7 +80,7 @@ print_file_content() {
     if [ -f "$file_path" ]; then
         echo "File exists: $file_path"
         echo "Content of $file_path:"
-        cat "$file_path"
+        $SUDO cat "$file_path"
     else
         echo "File does not exist: $file_path"
         return 1
@@ -94,7 +97,7 @@ get_service_logs() {
 
     # Using the log command to filter logs based on the service name
     # Adjust the predicate according to your service's logging subsystem or other criteria
-    log show --predicate "(subsystem == '$service_name' OR process == '$service_name')" --info --last $time_span --debug
+    $SUDO log show --predicate "(subsystem == '$service_name' OR process == '$service_name')" --info --last $time_span --debug
 }
 
 # Function to generate DeviceID combining System Drive Serial Number and Platform Serial Number
@@ -139,4 +142,11 @@ get_service_logs $SERVICE_NAME
 print_device_id
 
 echo ""
-echo "** SCRIPT EXECUTION DONE **"
+
+# Check if the script was running with sudo
+if [ "$(id -u)" != "0" ]; then
+    echo "* SCRIPT EXECUTION DONE ** (Note: not the whole script was run as ROOT)"
+    exit 1
+else
+    echo "** SCRIPT EXECUTION DONE **"
+fi

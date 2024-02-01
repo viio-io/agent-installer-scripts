@@ -27,7 +27,7 @@ sudo rm /etc/viio.conf
 
 ## Windows
 
-### Using Powershell
+### Using PowerShell
 
 Installation with specified Viio customer key:
 
@@ -58,7 +58,7 @@ ENDLOCAL
 
 ## Troubleshooting
 
-To check Agent installation we prepare `*.troubleshooting` script for each supported OS.
+To check Agent installation we've prepared troubleshooting script for each supported OS.
 
 ### MacOS script
 
@@ -68,7 +68,7 @@ Run script `macos.troubleshooting.sh` and check console output:
 bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh)"
 ```
 
-To share output with Viio dev team please save standard and error outputs into file using `&>` for redirection:
+To share the output with the Viio dev team, please save standard and error outputs into a file using `&>` for redirection:
 
 ```sh
 bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh)" &> result.txt
@@ -82,7 +82,7 @@ Run script `windows.troubleshooting.ps1` in PowerShell opened with Administrator
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.troubleshooting.ps1'))).Invoke()
 ```
 
-To share it with Viio dev team please save standard and error outputs into file using `*>` for redirection:
+To share the output with the Viio dev team, please save standard and error outputs into a file using `*>` for redirection:
 
 ```powershell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.troubleshooting.ps1'))).Invoke() *> "result.txt"

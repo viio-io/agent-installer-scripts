@@ -27,17 +27,17 @@ sudo rm /etc/viio.conf
 
 ## Windows
 
-### Using Powershell
+### Using PowerShell
 
 Installation with specified Viio customer key:
 
-```powerhsell
+```powershell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.install.ps1'))).Invoke("SPECIFY_CUSTOMER_KEY_HERE")
 ```
 
 Installation with specified Viio customer key and Employee email of computer:
 
-```powerhsell
+```powershell
 ([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.install.ps1'))).Invoke("SPECIFY_CUSTOMER_KEY_HERE", "SPECIFY_EMPLOYEE_EMAIL_HERE")
 ```
 
@@ -55,3 +55,35 @@ ENDLOCAL
 ```
 
 > *NOTE:* `SET email=%1` means that email will be passed to script by MDM solution as the 1st argument, e.g., `script.cmd test@example.com`. If the email is passed as the 2nd argument, the line will look `SET email=%2` and so on for 3rd, 4th, etc. order of argument.
+
+## Troubleshooting
+
+To check Agent installation we've prepared troubleshooting script for each supported OS.
+
+### MacOS script
+
+Run script `macos.troubleshooting.sh` and check console output:
+
+```sh
+bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh)"
+```
+
+To share the output with the Viio dev team, please save standard and error outputs into a file using `&>` for redirection:
+
+```sh
+bash -c "$(curl -L https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/macos.troubleshooting.sh)" &> result.txt
+```
+
+### Windows script
+
+Run script `windows.troubleshooting.ps1` in PowerShell opened with Administrator privileges and check console output:
+
+```powershell
+([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.troubleshooting.ps1'))).Invoke()
+```
+
+To share the output with the Viio dev team, please save standard and error outputs into a file using `*>` for redirection:
+
+```powershell
+([scriptblock]::Create((Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/viio-io/agent-installer-scripts/main/windows.troubleshooting.ps1'))).Invoke() *> "result.txt"
+```

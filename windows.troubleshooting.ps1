@@ -172,6 +172,15 @@ function Get-DeviceUUID {
     Write-Output "Machine Name: $env:COMPUTERNAME"
 }
 
+# Function to get user info
+function Get-UserInfo {
+    $username = [System.Environment]::UserName
+    $userdomain = [System.Environment]::UserDomainName
+
+    Write-Output "`nUser Name: $username"
+    Write-Output "User Domain: $userdomain"
+}
+
 # MAINs
 
 # Check if running as Administrator
@@ -201,6 +210,9 @@ Get-LatestFileContent -folderPath (Join-Path $folderOfServiceExecutable "logs")
 
 ## Device ID
 Get-DeviceUUID
+
+## Logged User Info
+Get-UserInfo
 
 # Get OS standart service log messages
 Get-ServiceLog -serviceName $SERVICE_NAME

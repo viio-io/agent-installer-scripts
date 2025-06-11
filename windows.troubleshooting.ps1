@@ -23,7 +23,7 @@ function Confirm-ServiceInstalled {
         Write-Output "`nService Status: $($service.Status)"
         Write-Output "`nStartup Type: $(Get-CimInstance -ClassName Win32_Service -Filter "Name='$serviceName'")"
     } else {
-        Write-Output "$serviceName is not installed."
+        Write-Warning "$serviceName is not installed."
     }
 }
 
@@ -32,7 +32,6 @@ function Get-ServiceExecutablePath {
     param (
         [string]$serviceName
     )
-
     # Get the service object
     $service = Get-CimInstance -ClassName Win32_Service -Filter "Name='$serviceName'"
 
@@ -45,7 +44,7 @@ function Get-ServiceExecutablePath {
         # Explicitly return the folder path
         return $serviceFolderPath
     } else {
-        Write-Error "`nService '$serviceName' is not installed on this system."
+        Write-Warning "`nService '$serviceName' is not installed on this system."
         return $null
     }
 }
@@ -86,11 +85,15 @@ function Get-FileContent {
         [string]$filePath
     )
 
-    if (Test-Path $filePath) {
-        Write-Output "`nContent of the file ($filePath):"
-        Get-Content -Path $filePath
-    } else {
-        Write-Warning "`nFile not found: $filePath"
+    try {
+        if (Test-Path $filePath) {
+            Write-Output "`nContent of the file ($filePath):"
+            Get-Content -Path $filePath
+        } else {
+            Write-Warning "`nFile not found: $filePath"
+        }
+    } catch {
+        Write-Warning "`nFailed to get file content"
     }
 }
 
@@ -99,15 +102,18 @@ function Get-LatestFileContent {
     param (
         [string]$folderPath
     )
+    try {
+        # Get all files in the folder, sorted by LastWriteTime
+        $latestFile = Get-ChildItem -Path $folderPath -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 
-    # Get all files in the folder, sorted by LastWriteTime
-    $latestFile = Get-ChildItem -Path $folderPath -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-
-    if ($latestFile) {
-        Write-Output "`nDisplaying content of the latest file: $($latestFile.FullName)"
-        Get-Content -Path $latestFile.FullName
-    } else {
-        Write-Warning "`nFiles in folder $folderPath are not found"
+        if ($latestFile) {
+            Write-Output "`nDisplaying content of the latest file: $($latestFile.FullName)"
+            Get-Content -Path $latestFile.FullName
+        } else {
+            Write-Warning "`nFiles in folder $folderPath are not found"
+        }
+    } catch {
+        Write-Warning "`nFailed to get latest file content"
     }
 }
 
@@ -181,6 +187,62 @@ function Get-UserInfo {
     Write-Output "User Domain: $userdomain"
 }
 
+function Get-Registry {
+    $displayNameFragment = "Viio"
+
+    # --- registry paths to search for MSI uninstall information -----------
+    $registryPaths = @(
+        # 1. Machine-wide (64-bit view)
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        # 2. Machine-wide (32-bit view on 64-bit OS)
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+
+        # 3. Per-user (current logged-on user, 64-bit view)
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        # 4. Per-user (current logged-on user, 32-bit view on 64-bit OS)
+        "HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+    )
+
+    # 5. Per-user **for every loaded profile** (useful on multi-user servers)
+    Get-ChildItem HKU:\ -ErrorAction SilentlyContinue |
+        Where-Object { $_.PSChildName -match 'S-\d-\d+-.+' } |  # keep only SIDs
+        ForEach-Object {
+            $sid = $_.PSChildName
+            $registryPaths += "HKU:\$sid\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+            $registryPaths += "HKU:\$sid\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+        }
+    # ----------------------------------------------------------------------
+
+    $foundMatches = @()
+
+    foreach ($regPath in $registryPaths) {
+        $keys = Get-ChildItem -Path $regPath -ErrorAction SilentlyContinue
+
+        foreach ($key in $keys) {
+            $props = Get-ItemProperty -Path $key.PSPath -ErrorAction SilentlyContinue
+
+            $isMatchByName = ($props.DisplayName -like "*$displayNameFragment*")
+
+            if ($isMatchByName) {
+                $foundMatches += [PSCustomObject]@{
+                    RegistryPath = $key.PSPath
+                    ProductCode  = $key.PSChildName
+                    DisplayName  = $props.DisplayName
+                    Version      = $props.DisplayVersion
+                    Publisher    = $props.Publisher
+                    InstallDate  = $props.InstallDate
+                }
+            }
+        }
+    }
+
+    if ($foundMatches.Count -eq 0) {
+        Write-Output "No matches found for product code or display name."
+    } else {
+        $foundMatches | Format-Table -AutoSize
+}
+}
+
 # MAINs
 
 # Check if running as Administrator
@@ -191,23 +253,30 @@ if (-not (Test-AdminPrivilege)) {
 # Check if the service is installed and its status
 Confirm-ServiceInstalled -serviceName $SERVICE_NAME
 
+Get-Registry
+
 # Print all files in service installation folder
 $folderOfServiceExecutable = Get-ServiceExecutablePath -serviceName $SERVICE_NAME
 
-Write-Output "`nExecutable Path for Service '$SERVICE_NAME': $folderOfServiceExecutable"
+if ($folderOfServiceExecutable) {
+    try {
+        Write-Output "`nExecutable Path for Service '$SERVICE_NAME': $folderOfServiceExecutable"
 
-Get-FileVersionInfo -filePath (Join-Path $folderOfServiceExecutable "DesktopAgent.Windows.exe")
+        Get-FileVersionInfo -filePath (Join-Path $folderOfServiceExecutable "DesktopAgent.Windows.exe")
 
-Get-DirectoryFilesInfo -directoryPath $folderOfServiceExecutable
+        Get-DirectoryFilesInfo -directoryPath $folderOfServiceExecutable
 
-Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "appsettings.json")
-Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "appsettings-after-install.json")
-Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "info.json")
-Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "config.json")
+        Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "appsettings.json")
+        Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "appsettings-after-install.json")
+        Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "info.json")
+        Get-FileContent -filePath (Join-Path $folderOfServiceExecutable "config.json")
 
-# Print latest log file
-Get-LatestFileContent -folderPath (Join-Path $folderOfServiceExecutable "logs")
-
+        # Print latest log file
+        Get-LatestFileContent -folderPath (Join-Path $folderOfServiceExecutable "logs")
+    } catch {
+        Write-Warning "`nFailed to get agent files"
+    }
+}
 ## Device ID
 Get-DeviceUUID
 

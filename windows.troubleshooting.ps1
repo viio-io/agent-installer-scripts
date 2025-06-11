@@ -1,4 +1,7 @@
 # Service name (replace with your specific service name)
+
+$ErrorActionPreference = 'Continue'
+
 $SERVICE_NAME = "ViioDesktopAgent"
 
 function Test-AdminPrivilege {

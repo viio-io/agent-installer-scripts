@@ -5,9 +5,9 @@ set -e
 # VIIO_CUSTOMER_KEY
 # VIIO_EMPLOYEE_EMAIL
 
-PKG_URL="https://cdn.oveo.io/desktop-agent/viio-agent-1.4.3.pkg"
+PKG_URL="https://cdn.viio.io/desktop-agent/viio-agent-1.5.0.pkg"
 # Checksum needs to be updated when PKG_URL is updated.
-CHECKSUM="a7f1fdbc8b61692b05deb80b9ce6c87d443f85d29f4e9b0f64b692e9dd245380"
+CHECKSUM="953f2cc32acb9afbd8a97b467c5d9e64ab83ca9f96ef2107474049ea8e2411a7"
 SUPPORT_EMAIL="support@viio.io"
 DEVELOPER_ID="Oveo ApS (895LF9A7K6)"
 CERT_SHA_FINGERPRINT="D6B409F777DC4F2D2C738EF021E40CD2286A9D8F3EA83ACFE3D2D449C53AE3A2"
@@ -18,34 +18,32 @@ VIIO_CONF_PATH="/etc/viio.conf"
 # Viio Agent needs to be installed as root; use sudo if not already uid 0
 ##
 if [ "$UID" = "0" ]; then
-    SUDO=''
+  SUDO=''
 else
-    SUDO='sudo -E'
+  SUDO='sudo -E'
 fi
 
 if [ -z "$VIIO_CUSTOMER_KEY" ]; then
-    printf "\033[31m
+  printf "\033[31m
 You must specify the VIIO_CUSTOMER_KEY environment variable in order to install the agent.
 \n\033[0m\n"
-    exit 1
+  exit 1
 fi
 
-
 function onerror() {
-    printf "\033[31m%s
+  printf "\033[31m%s
 Something went wrong while installing the Viio Desktop Agent.
 If you're having trouble installing, please send an email to %s, and we'll help you fix it!
 \n\033[0m\n" "$ERROR_MESSAGE" "$SUPPORT_EMAIL"
 }
 trap onerror ERR
 
-
 ##
 # Download the agent
 ##
 printf "\033[34m\n* Downloading the Viio Desktop Agent\n\033[0m"
 rm -f "$PKG_PATH"
-curl --progress-bar $PKG_URL > "$PKG_PATH"
+curl --progress-bar $PKG_URL >"$PKG_PATH"
 
 ##
 # Checksum
@@ -53,10 +51,10 @@ curl --progress-bar $PKG_URL > "$PKG_PATH"
 printf "\033[34m\n* Ensuring checksums match\n\033[0m"
 downloaded_checksum=$(shasum -a256 "$PKG_PATH" | cut -d" " -f1)
 if [ "$downloaded_checksum" = $CHECKSUM ]; then
-    printf "\033[34mChecksums match.\n\033[0m"
+  printf "\033[34mChecksums match.\n\033[0m"
 else
-    printf "\033[31m Checksums do not match. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
-    exit 1
+  printf "\033[31m Checksums do not match. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
+  exit 1
 fi
 
 ##
@@ -65,10 +63,10 @@ fi
 printf "\033[34m\n* Ensuring package Developer ID matches\n\033[0m"
 
 if pkgutil --check-signature "$PKG_PATH" | grep -q "$DEVELOPER_ID"; then
-    printf "\033[34mDeveloper ID matches.\n\033[0m"
+  printf "\033[34mDeveloper ID matches.\n\033[0m"
 else
-    printf "\033[31m Developer ID does not match. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
-    exit 1
+  printf "\033[31m Developer ID does not match. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
+  exit 1
 fi
 
 ##
@@ -76,10 +74,10 @@ fi
 ##
 printf "\033[34m\n* Ensuring package Developer Certificate Fingerprint matches\n\033[0m"
 if pkgutil --check-signature "$PKG_PATH" | tr -d '\n' | tr -d ' ' | grep -q "SHA256Fingerprint:$CERT_SHA_FINGERPRINT"; then
-    printf "\033[34mDeveloper Certificate Fingerprint matches.\n\033[0m"
+  printf "\033[34mDeveloper Certificate Fingerprint matches.\n\033[0m"
 else
-    printf "\033[31m Developer Certificate Fingerprint does not match. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
-    exit 1
+  printf "\033[31m Developer Certificate Fingerprint does not match. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
+  exit 1
 fi
 
 ##
@@ -88,7 +86,7 @@ fi
 printf "\033[34m\n* Installing the Viio Desktop Agent. You might be asked for your password...\n\033[0m"
 
 CONFIG="{\"CustomerKey\":\"$VIIO_CUSTOMER_KEY\",\"EmployeeEmail\":\"$VIIO_EMPLOYEE_EMAIL\"}"
-echo "$CONFIG" | $SUDO tee "$VIIO_CONF_PATH" > /dev/null
+echo "$CONFIG" | $SUDO tee "$VIIO_CONF_PATH" >/dev/null
 $SUDO /bin/chmod 400 "$VIIO_CONF_PATH"
 $SUDO /usr/sbin/chown root:wheel "$VIIO_CONF_PATH"
 
@@ -100,8 +98,8 @@ rm -f "$PKG_PATH"
 # check if the agent is running
 ##
 if launchctl print system/io.viio.agent.metalauncher | grep -q "state = running"; then
-    printf "\033[32mYour Agent is running properly. It will continue to run in the background and submit data to Viio.\033[0m"
+  printf "\033[32mYour Agent is running properly. It will continue to run in the background and submit data to Viio.\033[0m"
 else
-    printf "\033[31m The Viio Desktop Agent is not running after installation. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
-    exit 1
+  printf "\033[31m The Viio Desktop Agent is not running after installation. Please contact %s \033[0m\n" "$SUPPORT_EMAIL"
+  exit 1
 fi

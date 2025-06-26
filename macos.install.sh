@@ -5,9 +5,9 @@ set -e
 # VIIO_CUSTOMER_KEY
 # VIIO_EMPLOYEE_EMAIL
 
-PKG_URL="https://cdn.oveo.io/desktop-agent/viio-agent-1.4.3.pkg"
+PKG_URL="https://cdn.viio.io/desktop-agent/viio-agent-1.5.0.pkg"
 # Checksum needs to be updated when PKG_URL is updated.
-CHECKSUM="a7f1fdbc8b61692b05deb80b9ce6c87d443f85d29f4e9b0f64b692e9dd245380"
+CHECKSUM="953f2cc32acb9afbd8a97b467c5d9e64ab83ca9f96ef2107474049ea8e2411a7"
 SUPPORT_EMAIL="support@viio.io"
 DEVELOPER_ID="Oveo ApS (895LF9A7K6)"
 CERT_SHA_FINGERPRINT="D6B409F777DC4F2D2C738EF021E40CD2286A9D8F3EA83ACFE3D2D449C53AE3A2"
@@ -30,7 +30,6 @@ You must specify the VIIO_CUSTOMER_KEY environment variable in order to install 
     exit 1
 fi
 
-
 function onerror() {
     printf "\033[31m%s
 Something went wrong while installing the Viio Desktop Agent.
@@ -39,13 +38,12 @@ If you're having trouble installing, please send an email to %s, and we'll help 
 }
 trap onerror ERR
 
-
 ##
 # Download the agent
 ##
 printf "\033[34m\n* Downloading the Viio Desktop Agent\n\033[0m"
 rm -f "$PKG_PATH"
-curl --progress-bar $PKG_URL > "$PKG_PATH"
+curl --progress-bar $PKG_URL >"$PKG_PATH"
 
 ##
 # Checksum
@@ -88,7 +86,7 @@ fi
 printf "\033[34m\n* Installing the Viio Desktop Agent. You might be asked for your password...\n\033[0m"
 
 CONFIG="{\"CustomerKey\":\"$VIIO_CUSTOMER_KEY\",\"EmployeeEmail\":\"$VIIO_EMPLOYEE_EMAIL\"}"
-echo "$CONFIG" | $SUDO tee "$VIIO_CONF_PATH" > /dev/null
+echo "$CONFIG" | $SUDO tee "$VIIO_CONF_PATH" >/dev/null
 $SUDO /bin/chmod 400 "$VIIO_CONF_PATH"
 $SUDO /usr/sbin/chown root:wheel "$VIIO_CONF_PATH"
 

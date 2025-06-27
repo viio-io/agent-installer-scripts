@@ -237,7 +237,7 @@ function Get-Registry {
             }
         }
     }
-    
+
     Write-Output "`nRegistry check finished"
 }
 

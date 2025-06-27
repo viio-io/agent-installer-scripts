@@ -189,6 +189,8 @@ function Get-UserInfo {
 
 function Get-Registry {
 
+    Write-Output "`nChecking registry..."
+
     $displayNameFragment = "Viio"          # what to match in DisplayName
 
     # -- registry hives to search -------------------------------------------------
@@ -235,6 +237,8 @@ function Get-Registry {
             }
         }
     }
+    
+    Write-Output "`nRegistry check finished"
 }
 
 # MAINs

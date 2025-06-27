@@ -188,9 +188,12 @@ function Get-UserInfo {
 }
 
 function Get-Registry {
-    $displayNameFragment = "Viio"
 
-    # --- registry paths to search for MSI uninstall information -----------
+    Write-Output "`nChecking registry..."
+
+    $displayNameFragment = "Viio"          # what to match in DisplayName
+
+    # -- registry hives to search -------------------------------------------------
     $registryPaths = @(
         # 1. Machine-wide (64-bit view)
         "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
@@ -205,7 +208,7 @@ function Get-Registry {
 
     # 5. Per-user **for every loaded profile** (useful on multi-user servers)
     Get-ChildItem HKU:\ -ErrorAction SilentlyContinue |
-        Where-Object { $_.PSChildName -match 'S-\d-\d+-.+' } |  # keep only SIDs
+        Where-Object { $_.Name -match '^HKEY_USERS\\S-\d-\d+-.+' } |   # only SIDs# keep only SIDs
         ForEach-Object {
             $sid = $_.PSChildName
             $registryPaths += "HKU:\$sid\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
@@ -213,34 +216,29 @@ function Get-Registry {
         }
     # ----------------------------------------------------------------------
 
-    $foundMatches = @()
+    foreach ($path in $registryPaths) {
 
-    foreach ($regPath in $registryPaths) {
-        $keys = Get-ChildItem -Path $regPath -ErrorAction SilentlyContinue
+        Get-ChildItem -Path $path -ErrorAction SilentlyContinue | ForEach-Object {
 
-        foreach ($key in $keys) {
-            $props = Get-ItemProperty -Path $key.PSPath -ErrorAction SilentlyContinue
+            $keyPath = $_.PSPath
+            $props   = Get-ItemProperty -Path $keyPath -ErrorAction SilentlyContinue
 
-            $isMatchByName = ($props.DisplayName -like "*$displayNameFragment*")
-
-            if ($isMatchByName) {
-                $foundMatches += [PSCustomObject]@{
-                    RegistryPath = $key.PSPath
-                    ProductCode  = $key.PSChildName
-                    DisplayName  = $props.DisplayName
-                    Version      = $props.DisplayVersion
-                    Publisher    = $props.Publisher
-                    InstallDate  = $props.InstallDate
-                }
+            # skip if no DisplayName or if it doesn't contain "Viio"
+            if ($null -ne $props.DisplayName -and
+                $props.DisplayName -like "*$displayNameFragment*")
+            {
+                # ----- full dump (every name/value on its own line) -------------
+                Write-Output "`n[$keyPath]" -ForegroundColor Cyan
+                $props.PSObject.Properties |
+                    Sort-Object Name |
+                    ForEach-Object {
+                        Write-Output ("{0} : {1}" -f $_.Name, $_.Value)
+                    }
             }
         }
     }
 
-    if ($foundMatches.Count -eq 0) {
-        Write-Output "No matches found for product code or display name."
-    } else {
-        $foundMatches | Format-Table -AutoSize
-}
+    Write-Output "`nRegistry check finished"
 }
 
 # MAINs

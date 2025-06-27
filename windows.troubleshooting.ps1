@@ -228,11 +228,11 @@ function Get-Registry {
                 $props.DisplayName -like "*$displayNameFragment*")
             {
                 # ----- full dump (every name/value on its own line) -------------
-                Write-Host "`n[$keyPath]" -ForegroundColor Cyan
+                Write-Output "`n[$keyPath]" -ForegroundColor Cyan
                 $props.PSObject.Properties |
                     Sort-Object Name |
                     ForEach-Object {
-                        Write-Host ("{0} : {1}" -f $_.Name, $_.Value)
+                        Write-Output ("{0} : {1}" -f $_.Name, $_.Value)
                     }
             }
         }

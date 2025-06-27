@@ -188,59 +188,61 @@ function Get-UserInfo {
 }
 
 function Get-Registry {
-    $displayNameFragment = "Viio"
 
-    # --- registry paths to search for MSI uninstall information -----------
+    $displayNameFragment = "Viio"          # what to match in DisplayName
+
+    # -- registry hives to search -------------------------------------------------
     $registryPaths = @(
-        # 1. Machine-wide (64-bit view)
-        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-        # 2. Machine-wide (32-bit view on 64-bit OS)
-        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-
-        # 3. Per-user (current logged-on user, 64-bit view)
-        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-        # 4. Per-user (current logged-on user, 32-bit view on 64-bit OS)
-        "HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+        # machine – 64-bit view
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
+        # machine – 32-bit view on 64-bit OS
+        'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall',
+        # current user – both views
+        'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
+        'HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
     )
 
-    # 5. Per-user **for every loaded profile** (useful on multi-user servers)
+    # user hives for **every** loaded profile (Citrix, RDS, etc.)
     Get-ChildItem HKU:\ -ErrorAction SilentlyContinue |
-        Where-Object { $_.PSChildName -match 'S-\d-\d+-.+' } |  # keep only SIDs
+        Where-Object { $_.Name -match '^HKEY_USERS\\S-\d-\d+-.+' } |   # only SIDs
         ForEach-Object {
             $sid = $_.PSChildName
             $registryPaths += "HKU:\$sid\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
             $registryPaths += "HKU:\$sid\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
         }
-    # ----------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
-    $foundMatches = @()
+    $summary = @()
 
-    foreach ($regPath in $registryPaths) {
-        $keys = Get-ChildItem -Path $regPath -ErrorAction SilentlyContinue
+    foreach ($path in $registryPaths) {
 
-        foreach ($key in $keys) {
-            $props = Get-ItemProperty -Path $key.PSPath -ErrorAction SilentlyContinue
+        Get-ChildItem -Path $path -ErrorAction SilentlyContinue | ForEach-Object {
 
-            $isMatchByName = ($props.DisplayName -like "*$displayNameFragment*")
+            $keyPath = $_.PSPath
+            $props   = Get-ItemProperty -Path $keyPath -ErrorAction SilentlyContinue
 
-            if ($isMatchByName) {
-                $foundMatches += [PSCustomObject]@{
-                    RegistryPath = $key.PSPath
-                    ProductCode  = $key.PSChildName
-                    DisplayName  = $props.DisplayName
-                    Version      = $props.DisplayVersion
-                    Publisher    = $props.Publisher
-                    InstallDate  = $props.InstallDate
-                }
+            # skip if no DisplayName or if it doesn't contain "Viio"
+            if ($null -ne $props.DisplayName -and
+                $props.DisplayName -like "*$displayNameFragment*")
+            {
+                # ----- full dump (every name/value on its own line) -------------
+                Write-Host "`n[$keyPath]" -ForegroundColor Cyan
+                $props.PSObject.Properties |
+                    Sort-Object Name |
+                    ForEach-Object {
+                        Write-Host ("{0} : {1}" -f $_.Name, $_.Value)
+                    }
             }
         }
     }
 
-    if ($foundMatches.Count -eq 0) {
-        Write-Output "No matches found for product code or display name."
-    } else {
-        $foundMatches | Format-Table -AutoSize
-}
+    if ($summary.Count) {
+        Write-Host "`n=== Compact summary ===" -ForegroundColor Yellow
+        $summary | Sort-Object DisplayName | Format-Table -AutoSize
+    }
+    else {
+        Write-Warning "No Viio-related uninstall entries were found."
+    }
 }
 
 # MAINs

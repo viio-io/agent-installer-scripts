@@ -204,17 +204,15 @@ function Get-Registry {
         "HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
     )
 
-    # user hives for **every** loaded profile (Citrix, RDS, etc.)
+    # 5. Per-user **for every loaded profile** (useful on multi-user servers)
     Get-ChildItem HKU:\ -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -match '^HKEY_USERS\\S-\d-\d+-.+' } |   # only SIDs
+        Where-Object { $_.Name -match '^HKEY_USERS\\S-\d-\d+-.+' } |   # only SIDs# keep only SIDs
         ForEach-Object {
             $sid = $_.PSChildName
             $registryPaths += "HKU:\$sid\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
             $registryPaths += "HKU:\$sid\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
         }
-    # ---------------------------------------------------------------------------
-
-    $summary = @()
+    # ----------------------------------------------------------------------
 
     foreach ($path in $registryPaths) {
 
@@ -236,14 +234,6 @@ function Get-Registry {
                     }
             }
         }
-    }
-
-    if ($summary.Count) {
-        Write-Host "`n=== Compact summary ===" -ForegroundColor Yellow
-        $summary | Sort-Object DisplayName | Format-Table -AutoSize
-    }
-    else {
-        Write-Warning "No Viio-related uninstall entries were found."
     }
 }
 

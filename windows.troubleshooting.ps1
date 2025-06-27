@@ -193,13 +193,15 @@ function Get-Registry {
 
     # -- registry hives to search -------------------------------------------------
     $registryPaths = @(
-        # machine – 64-bit view
-        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
-        # machine – 32-bit view on 64-bit OS
-        'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall',
-        # current user – both views
-        'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
-        'HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+        # 1. Machine-wide (64-bit view)
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        # 2. Machine-wide (32-bit view on 64-bit OS)
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+
+        # 3. Per-user (current logged-on user, 64-bit view)
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        # 4. Per-user (current logged-on user, 32-bit view on 64-bit OS)
+        "HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
     )
 
     # user hives for **every** loaded profile (Citrix, RDS, etc.)

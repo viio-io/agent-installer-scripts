@@ -5,9 +5,9 @@ set -e
 # VIIO_CUSTOMER_KEY
 # VIIO_EMPLOYEE_EMAIL
 
-PKG_URL="https://cdn.viio.io/desktop-agent/viio-agent-1.5.0.pkg"
+PKG_URL="https://cdn.viio.io/desktop-agent/viio-agent-1.5.2.pkg"
 # Checksum needs to be updated when PKG_URL is updated.
-CHECKSUM="953f2cc32acb9afbd8a97b467c5d9e64ab83ca9f96ef2107474049ea8e2411a7"
+CHECKSUM="814e9f100f1cd5b7834567d58cbbbebb1b7a8c027ff87ce42e5217836f701ff3"
 SUPPORT_EMAIL="support@viio.io"
 DEVELOPER_ID="Oveo ApS (895LF9A7K6)"
 CERT_SHA_FINGERPRINT="D6B409F777DC4F2D2C738EF021E40CD2286A9D8F3EA83ACFE3D2D449C53AE3A2"

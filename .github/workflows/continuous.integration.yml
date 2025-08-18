@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Desktop.Agent on MacOS
         run: VIIO_CUSTOMER_KEY="EXAMPLE_KEY" VIIO_EMPLOYEE_EMAIL="user@test.com" ./macos.install.sh
@@ -29,7 +29,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Desktop.Agent on Windows
         run: ./windows.install.ps1 -EmployeeEmail "" -CustomerKey "EXAMPLE_KEY"

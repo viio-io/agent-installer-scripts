@@ -4,14 +4,20 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-  packages: read
-  statuses: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
     name: Lint Code Base
+
+    permissions:
+      contents: read
+      statuses: write
+
     runs-on: ubuntu-latest
 
     steps:

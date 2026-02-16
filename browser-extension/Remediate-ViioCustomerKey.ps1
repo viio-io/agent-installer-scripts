@@ -18,10 +18,12 @@ $ExitCode = 0
 
 foreach ($Name in $RegistryPaths.Keys) {
     $Path = $RegistryPaths[$Name]
+    $PathCreated = $false
 
     try {
         if (-not (Test-Path $Path)) {
             New-Item -Path $Path -Force | Out-Null
+            $PathCreated = $true
             Write-Output "$Name - Created path"
         }
         Set-ItemProperty -Path $Path -Name "customerKey" -Value $CustomerKey -Type String -Force
@@ -29,6 +31,16 @@ foreach ($Name in $RegistryPaths.Keys) {
     }
     catch {
         Write-Output "$Name - Failed: $_"
+        # Clean up if we created the path but failed to set the property
+        if ($PathCreated -and (Test-Path $Path)) {
+            try {
+                Remove-Item -Path $Path -Force -ErrorAction SilentlyContinue
+                Write-Output "$Name - Cleaned up created path due to failure"
+            }
+            catch {
+                # Silently ignore cleanup errors
+            }
+        }
         $ExitCode = 1
     }
 }

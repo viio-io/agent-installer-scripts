@@ -16,20 +16,26 @@ $RegistryPaths = @{
     "Edge - Standard"   = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\3rdparty\extensions\fjambfppaeandondpbbjkggkabeccjmh\policy"
 }
 
+$Issues = @()
+
 foreach ($Name in $RegistryPaths.Keys) {
     $Path = $RegistryPaths[$Name]
 
     if (-not (Test-Path $Path)) {
-        Write-Output "$Name - Path missing: $Path"
-        exit 1
+        $Issues += "$Name - Path missing: $Path"
+        continue
     }
 
     $Value = Get-ItemProperty -Path $Path -Name "customerKey" -ErrorAction SilentlyContinue
 
     if ($Value.customerKey -ne $CustomerKey) {
-        Write-Output "$Name - customerKey incorrect or missing"
-        exit 1
+        $Issues += "$Name - customerKey incorrect or missing"
     }
+}
+
+if ($Issues.Count -gt 0) {
+    $Issues | ForEach-Object { Write-Output $_ }
+    exit 1
 }
 
 Write-Output "All registry keys are configured correctly"

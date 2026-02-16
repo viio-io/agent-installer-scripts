@@ -38,7 +38,8 @@ foreach ($Name in $RegistryPaths.Keys) {
                 Write-Output "$Name - Cleaned up created path due to failure"
             }
             catch {
-                # Silently ignore cleanup errors
+                # Cleanup failed, but we can't do anything about it - the main error is already reported
+                Write-Verbose "Failed to clean up path $Path : $_"
             }
         }
         $ExitCode = 1

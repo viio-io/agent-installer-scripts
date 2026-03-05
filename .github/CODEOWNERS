@@ -1,1 +1,3 @@
 * @viio-io/discovery
+/.github/workflows/linter.yml @viio-io/architecture
+/.github/linters/ @viio-io/architecture

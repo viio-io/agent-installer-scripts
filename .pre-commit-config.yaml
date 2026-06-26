@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+  - repo: https://github.com/ryanlewis/pre-commit-mirror-textlint
+    rev: v15.7.1
+    hooks:
+      - id: textlint
+        types: [markdown, text]
+        additional_dependencies:
+          - textlint@15.2.3
+          - textlint-rule-terminology@5.2.16
+        args: ["--rule", "terminology", "--fix"]
+  - repo: local
+    hooks:
+      - id: oxfmt
+        name: oxfmt
+        language: node
+        entry: oxfmt --write --no-error-on-unmatched-pattern
+        additional_dependencies:
+          - oxfmt@0.55.0
+        types_or: [yaml, markdown, json]

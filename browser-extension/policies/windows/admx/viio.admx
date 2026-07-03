@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions revision="1.0" schemaVersion="1.0"
+    xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions"
+    xmlns:policy="http://schemas.microsoft.com/GroupPolicy/2006/07/Policy">
+
+    <!-- Required: namespaces -->
+    <policyNamespaces>
+        <target namespace="Viio.Policies" prefix="viio" />
+    </policyNamespaces>
+
+    <!-- Required: resources + supportedOn -->
+    <resources minRequiredRevision="1.0" />
+    <supportedOn>
+        <definitions>
+            <!-- keep simple; display name comes from ADML -->
+            <definition name="SUPPORTED_Version" displayName="$(string.SUPPORTED_Version)" />
+        </definitions>
+    </supportedOn>
+
+    <!-- Categories must be flat; use parentCategory to nest -->
+    <categories>
+        <category name="ViioCategory" displayName="$(string.ViioCategory)" />
+        <category name="ExtensionCategory" displayName="$(string.ExtensionCategory)">
+            <parentCategory ref="ViioCategory" />
+        </category>
+
+        <!-- Silent -->
+        <category name="SilentExtensionCategory" displayName="$(string.SilentExtensionCategory)">
+            <parentCategory ref="ExtensionCategory" />
+        </category>
+        <category name="SilentExtensionCategory_Chrome" displayName="$(string.ChromeCategory)">
+            <parentCategory ref="SilentExtensionCategory" />
+        </category>
+        <category name="SilentExtensionCategory_Edge" displayName="$(string.EdgeCategory)">
+            <parentCategory ref="SilentExtensionCategory" />
+        </category>
+
+        <!-- Standard -->
+        <category name="StandardExtensionCategory" displayName="$(string.StandardExtensionCategory)">
+            <parentCategory ref="ExtensionCategory" />
+        </category>
+        <category name="StandardExtensionCategory_Chrome" displayName="$(string.ChromeCategory)">
+            <parentCategory ref="StandardExtensionCategory" />
+        </category>
+        <category name="StandardExtensionCategory_Edge" displayName="$(string.EdgeCategory)">
+            <parentCategory ref="StandardExtensionCategory" />
+        </category>
+    </categories>
+
+    <!-- Policies -->
+    <policies>
+        <!-- Silent: Customer Key (Machine) -->
+        <!-- Chrome -->
+        <policy name="SilentCustomerKey_Chrome" class="Machine"
+            displayName="$(string.CustomerKey)"
+            explainText="$(string.CustomerKeyExplain_Chrome)"
+            key="SOFTWARE\Policies\Google\Chrome\3rdparty\extensions\nffjckgmpigfpkmamacllkakieaphfnm\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="SilentExtensionCategory_Chrome" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+
+        <!-- Edge -->
+        <policy name="SilentCustomerKey_Edge" class="Machine"
+            displayName="$(string.CustomerKey)"
+            explainText="$(string.CustomerKeyExplain_Edge)"
+            key="SOFTWARE\Policies\Microsoft\Edge\3rdparty\extensions\nffjckgmpigfpkmamacllkakieaphfnm\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="SilentExtensionCategory_Edge" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+
+
+        <!-- Standard: Customer Key (Machine) -->
+        <!-- Chrome -->
+        <policy name="StandardCustomerKey_Chrome" class="Machine"
+            displayName="$(string.CustomerKey)"
+            explainText="$(string.CustomerKeyExplain_Chrome)"
+            key="SOFTWARE\Policies\Google\Chrome\3rdparty\extensions\fjambfppaeandondpbbjkggkabeccjmh\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="StandardExtensionCategory_Chrome" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+
+        <!-- Edge -->
+        <policy name="StandardCustomerKey_Edge" class="Machine"
+            displayName="$(string.CustomerKey)"
+            explainText="$(string.CustomerKeyExplain_Edge)"
+            key="SOFTWARE\Policies\Microsoft\Edge\3rdparty\extensions\fjambfppaeandondpbbjkggkabeccjmh\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="StandardExtensionCategory_Edge" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+    </policies>
+
+</policyDefinitions>

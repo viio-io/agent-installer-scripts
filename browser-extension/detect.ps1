@@ -61,15 +61,21 @@ function Resolve-LoggedOnUserSid {
 
 function Resolve-Upn {
     param([string]$Sid)
-    # The AAD\Package\* glob can match multiple subkeys, so .Username may be an
-    # array; take the first non-empty value to keep the result deterministic.
-    $upn = (Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package\*" `
-            -ErrorAction SilentlyContinue).Username | Where-Object { $_ } | Select-Object -First 1
-    if (-not $upn) {
-        $upn = (Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity" `
-                -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -First 1
+    # The AAD\Package\* glob can match multiple subkeys (multiple work/school
+    # accounts). Resolve only when there is exactly one distinct UPN; if it is
+    # ambiguous, return $null so the caller fails rather than guessing an email.
+    $upns = @((Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package\*" `
+              -ErrorAction SilentlyContinue).Username | Where-Object { $_ } | Select-Object -Unique)
+
+    if ($upns.Count -eq 0) {
+        $upns = @((Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity" `
+                  -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -Unique)
     }
-    return $upn
+
+    if ($upns.Count -ne 1) {
+        return $null
+    }
+    return $upns[0]
 }
 
 # ---- Validate configuration -------------------------------------------------

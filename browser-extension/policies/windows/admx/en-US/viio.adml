@@ -23,9 +23,6 @@
 
             <!-- SupportedOn -->
             <string id="SUPPORTED_Version">Microsoft Windows 7 or later</string>
-
-            <!-- Values -->
-            <string id="CustomerKey_on">Enable customerKey policy</string>
         </stringTable>
 
         <!-- Descriptions for policies -->

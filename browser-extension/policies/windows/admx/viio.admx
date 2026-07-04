@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <policyDefinitions revision="1.0" schemaVersion="1.0"
-    xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions"
-    xmlns:policy="http://schemas.microsoft.com/GroupPolicy/2006/07/Policy">
+    xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
 
     <!-- Required: namespaces -->
     <policyNamespaces>

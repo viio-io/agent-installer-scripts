@@ -9,17 +9,14 @@
             <!-- Categories -->
             <string id="ViioCategory">Viio</string>
             <string id="ExtensionCategory">Extensions</string>
-            <string id="SilentExtensionCategory">Silent</string>
-            <string id="StandardExtensionCategory">Standard</string>
             <string id="ChromeCategory">Chrome</string>
             <string id="EdgeCategory">Edge</string>
 
-
             <!-- Policies -->
-            <string id="CustomerKey">Customer Key</string>
+            <string id="CustomerKey_Silent">Customer Key (Silent)</string>
+            <string id="CustomerKey_Interactive">Customer Key (Interactive)</string>
             <string id="CustomerKeyExplain_Chrome">Applies a predefined Customer Key for Viio browser extension. Writes to Chrome managed policy path for the extension ID.</string>
             <string id="CustomerKeyExplain_Edge">Applies a predefined Customer Key for Viio browser extension. Writes to Edge managed policy path for the extension ID.</string>
-
 
             <!-- SupportedOn -->
             <string id="SUPPORTED_Version">Microsoft Windows 7 or later</string>

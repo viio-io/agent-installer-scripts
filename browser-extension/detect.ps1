@@ -61,11 +61,13 @@ function Resolve-LoggedOnUserSid {
 
 function Resolve-Upn {
     param([string]$Sid)
+    # The AAD\Package\* glob can match multiple subkeys, so .Username may be an
+    # array; take the first non-empty value to keep the result deterministic.
     $upn = (Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package\*" `
-            -ErrorAction SilentlyContinue).Username
+            -ErrorAction SilentlyContinue).Username | Where-Object { $_ } | Select-Object -First 1
     if (-not $upn) {
         $upn = (Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity" `
-                -ErrorAction SilentlyContinue).ADUserName
+                -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -First 1
     }
     return $upn
 }

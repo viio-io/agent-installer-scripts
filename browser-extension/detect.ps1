@@ -10,8 +10,8 @@
     Exit 1 = Non-compliant (something missing/incorrect -> remediation runs)
 
     IMPORTANT: The CONFIGURATION section below MUST match the paired remediation
-    script (Remediate-ViioCustomerKey.ps1). If they diverge, remediation either
-    never runs or runs on every cycle.
+    script (remediate.ps1). If they diverge, remediation either never runs or
+    runs on every cycle.
 
     Scope rules mirror remediation:
       * customerKey  is REQUIRED and always checked in HKLM (machine-wide).

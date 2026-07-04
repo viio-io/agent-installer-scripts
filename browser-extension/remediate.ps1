@@ -54,7 +54,7 @@ function Resolve-LoggedOnUserSid {
     }
     $sid = (New-Object System.Security.Principal.NTAccount($loggedOnUser)).Translate(
              [System.Security.Principal.SecurityIdentifier]).Value
-    Write-Output "Logged-on user: [$loggedOnUser] SID: [$sid]"
+    Write-Host "Logged-on user: [$loggedOnUser] SID: [$sid]"
     return $sid
 }
 

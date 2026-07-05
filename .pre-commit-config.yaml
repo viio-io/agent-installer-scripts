@@ -18,6 +18,11 @@ repos:
           - textlint@15.2.3
           - textlint-rule-terminology@5.2.16
         args: ["--rule", "terminology", "--fix"]
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker
+    rev: v3.6.1
+    hooks:
+      - id: editorconfig-checker
+        args: ["--config", "./.github/linters/.editorconfig-checker.json"]
   - repo: local
     hooks:
       - id: oxfmt

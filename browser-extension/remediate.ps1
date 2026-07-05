@@ -52,10 +52,8 @@ function Resolve-LoggedOnUserSid {
     if (-not $loggedOnUser) {
         throw "Could not determine the logged-on user."
     }
-    $sid = (New-Object System.Security.Principal.NTAccount($loggedOnUser)).Translate(
+    return (New-Object System.Security.Principal.NTAccount($loggedOnUser)).Translate(
              [System.Security.Principal.SecurityIdentifier]).Value
-    Write-Host "Logged-on user: [$loggedOnUser] SID: [$sid]"
-    return $sid
 }
 
 function Resolve-Upn {
@@ -102,6 +100,7 @@ $resolvedEmail = $EmployeeEmail
 try {
     if ($setEmployeeEmail -and ($EmployeeEmailScope -eq "HKCU" -or $EmployeeEmail -eq "AUTO")) {
         $userSid = Resolve-LoggedOnUserSid
+        Write-Output "Logged-on user SID: [$userSid]"
     }
 
     if ($setEmployeeEmail -and $EmployeeEmail -eq "AUTO") {

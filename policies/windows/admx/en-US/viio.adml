@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources revision="1.1" schemaVersion="1.0"
+    xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+    <displayName />
+    <description />
+    <resources>
+        <!-- Strings shown in the GPO editor -->
+        <stringTable>
+            <!-- Categories -->
+            <string id="ViioCategory">Viio</string>
+            <string id="ExtensionCategory">Extensions</string>
+            <string id="ChromeCategory">Chrome</string>
+            <string id="EdgeCategory">Edge</string>
+
+            <!-- Policies -->
+            <string id="CustomerKey_Silent">Customer Key (Silent)</string>
+            <string id="CustomerKey_Interactive">Customer Key (Interactive)</string>
+            <string id="CustomerKeyExplain_Chrome">Applies a predefined Customer Key for Viio browser extension. Writes to Chrome managed policy path for the extension ID.</string>
+            <string id="CustomerKeyExplain_Edge">Applies a predefined Customer Key for Viio browser extension. Writes to Edge managed policy path for the extension ID.</string>
+
+            <!-- SupportedOn -->
+            <string id="SUPPORTED_Version">Microsoft Windows 7 or later</string>
+        </stringTable>
+
+        <!-- Descriptions for policies -->
+        <presentationTable>
+            <presentation id="CustomerKeyExplain">
+                <textBox refId="customerKey">
+                    <label>Specify customer key provided by Viio</label>
+                </textBox>
+            </presentation>
+        </presentationTable>
+    </resources>
+</policyDefinitionResources>

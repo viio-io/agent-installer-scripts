@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions revision="1.1" schemaVersion="1.0"
+    xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+
+    <!-- Required: namespaces -->
+    <policyNamespaces>
+        <target namespace="Viio.Policies" prefix="viio" />
+    </policyNamespaces>
+
+    <!-- Required: resources + supportedOn -->
+    <resources minRequiredRevision="1.1" />
+    <supportedOn>
+        <definitions>
+            <!-- keep simple; display name comes from ADML -->
+            <definition name="SUPPORTED_Version" displayName="$(string.SUPPORTED_Version)" />
+        </definitions>
+    </supportedOn>
+
+    <!-- Categories: Viio > Extensions > Chrome/Edge. Edition (Silent/Interactive)
+         is carried in the policy display name so category names stay unique. -->
+    <categories>
+        <category name="ViioCategory" displayName="$(string.ViioCategory)" />
+        <category name="ExtensionCategory" displayName="$(string.ExtensionCategory)">
+            <parentCategory ref="ViioCategory" />
+        </category>
+        <category name="ExtensionCategory_Chrome" displayName="$(string.ChromeCategory)">
+            <parentCategory ref="ExtensionCategory" />
+        </category>
+        <category name="ExtensionCategory_Edge" displayName="$(string.EdgeCategory)">
+            <parentCategory ref="ExtensionCategory" />
+        </category>
+    </categories>
+
+    <!-- Policies: Customer Key (Machine), one per edition per browser -->
+    <policies>
+        <!-- Chrome -->
+        <policy name="CustomerKey_Chrome_Silent" class="Machine"
+            displayName="$(string.CustomerKey_Silent)"
+            explainText="$(string.CustomerKeyExplain_Chrome)"
+            key="SOFTWARE\Policies\Google\Chrome\3rdparty\extensions\nffjckgmpigfpkmamacllkakieaphfnm\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="ExtensionCategory_Chrome" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+
+        <policy name="CustomerKey_Chrome_Interactive" class="Machine"
+            displayName="$(string.CustomerKey_Interactive)"
+            explainText="$(string.CustomerKeyExplain_Chrome)"
+            key="SOFTWARE\Policies\Google\Chrome\3rdparty\extensions\fjambfppaeandondpbbjkggkabeccjmh\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="ExtensionCategory_Chrome" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+
+        <!-- Edge -->
+        <policy name="CustomerKey_Edge_Silent" class="Machine"
+            displayName="$(string.CustomerKey_Silent)"
+            explainText="$(string.CustomerKeyExplain_Edge)"
+            key="SOFTWARE\Policies\Microsoft\Edge\3rdparty\extensions\nffjckgmpigfpkmamacllkakieaphfnm\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="ExtensionCategory_Edge" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+
+        <policy name="CustomerKey_Edge_Interactive" class="Machine"
+            displayName="$(string.CustomerKey_Interactive)"
+            explainText="$(string.CustomerKeyExplain_Edge)"
+            key="SOFTWARE\Policies\Microsoft\Edge\3rdparty\extensions\fjambfppaeandondpbbjkggkabeccjmh\policy"
+            presentation="$(presentation.CustomerKeyExplain)">
+            <parentCategory ref="ExtensionCategory_Edge" />
+            <supportedOn ref="SUPPORTED_Version" />
+            <elements>
+                <text id="customerKey" maxLength="24" valueName="customerKey" />
+            </elements>
+        </policy>
+    </policies>
+
+</policyDefinitions>

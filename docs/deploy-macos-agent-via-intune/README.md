@@ -49,7 +49,8 @@ Upload the `viio-agent-1.5.2.pkg` file you downloaded in Step 1 and click
 ![Upload the Viio agent package](images/04-upload-app-package.png)
 
 On the **App information** page, the name and description are pre-filled from
-the package. Set **Publisher** to `Viio` and click **Next**.
+the package. Set **Publisher** to `Viio`, set **Category** to `Other apps`,
+and click **Next**.
 
 ![App information page](images/05-app-information.png)
 

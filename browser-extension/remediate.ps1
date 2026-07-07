@@ -84,6 +84,7 @@ function Get-DeviceJoinState {
     foreach ($flag in @("AzureAdJoined", "EnterpriseJoined", "DomainJoined", "WorkplaceJoined")) {
         $line = $status | Where-Object { $_ -match "^\s*$flag\s*:" } | Select-Object -First 1
         if ($line) { Write-Diag ("dsregcmd: " + ($line.Trim())) }
+        else { Write-Diag "dsregcmd: $flag not found in output." }
     }
 }
 
@@ -141,6 +142,7 @@ function Resolve-Upn {
         Write-Diag "Multiple distinct UPNs found - ambiguous, refusing to guess."
         return
     }
+    Write-Diag "Resolved UPN: [$($upns[0])]"
     $Upn.Value = $upns[0]
 }
 

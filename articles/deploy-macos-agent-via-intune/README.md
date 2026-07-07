@@ -79,8 +79,11 @@ launchctl print system/io.viio.agent.metalauncher | grep -q "state = running"
 
 ## Step 4 — Detection rules and requirements
 
-Leave the **Requirements** and **Detection rules** settings at their defaults.
-Intune detects the app using the package IDs and version included in the
+On the **Requirements** step, set **Minimum operating system** to
+**macOS Monterey 12.0** — the oldest macOS version the agent supports.
+
+Leave the **Detection rules** settings at their defaults. Intune detects the
+app using the package ID (`io.viio.agent`) and version included in the
 `.pkg` file.
 
 <!-- ![Detection rules](images/05-detection-rules.png) -->

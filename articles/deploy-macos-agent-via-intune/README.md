@@ -19,7 +19,8 @@ so the agent is fully configured the moment it starts.
 
 ## Step 1 — Download the agent package
 
-Download the agent installer package:
+Download the agent installer package (replace `1.5.2` with the current
+version if a newer release is available):
 
 ```text
 https://cdn.viio.io/desktop-agent/viio-agent-1.5.2.pkg
@@ -59,6 +60,7 @@ replacing `YOUR_CUSTOMER_KEY_HERE` with your Viio customer key:
 
 ```bash
 #!/bin/bash
+set -e
 CUSTOMER_KEY="YOUR_CUSTOMER_KEY_HERE"
 EMPLOYEE_EMAIL=""
 
@@ -78,8 +80,11 @@ failure if the agent did not start after installation:
 
 ```bash
 #!/bin/bash
-sleep 10
-launchctl print system/io.viio.agent.metalauncher | grep -q "state = running"
+for _ in 1 2 3 4 5 6; do
+  sleep 5
+  launchctl print system/io.viio.agent.metalauncher 2>/dev/null | grep -q "state = running" && exit 0
+done
+exit 1
 ```
 
 ## Step 4 — Requirements and detection rules

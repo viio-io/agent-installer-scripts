@@ -30,26 +30,31 @@ The package is signed by `Oveo ApS (895LF9A7K6)`, Viio's Apple Developer ID.
 ## Step 2 — Create the app in Intune
 
 In the [Intune admin center](https://intune.microsoft.com), go to
-**Apps → macOS → Add** and select the **macOS app (PKG)** app type.
+**Apps → macOS**.
 
-<!-- ![Select the macOS app (PKG) app type](images/01-add-app-pkg.png) -->
+![Navigate to Apps → macOS](images/01-apps-macos-navigation.png)
 
-Upload the `viio-agent-1.5.2.pkg` file you downloaded in Step 1.
+On the **macOS apps** page, click **Create**.
 
-<!-- ![Upload the Viio agent package](images/02-upload-pkg.png) -->
+![Click Create on the macOS apps page](images/02-macos-apps-create.png)
 
-On the **App information** page, fill in the details, for example:
+In the **Select app type** dialog, choose **macOS app (PKG)** under _Other_.
 
-| Field     | Value              |
-| --------- | ------------------ |
-| Name      | Viio Desktop Agent |
-| Publisher | Viio               |
+![Select the macOS app (PKG) app type](images/03-select-app-type-pkg.png)
 
-<!-- ![App information page](images/03-app-information.png) -->
+Upload the `viio-agent-1.5.2.pkg` file you downloaded in Step 1 and click
+**OK**.
+
+![Upload the Viio agent package](images/04-upload-app-package.png)
+
+On the **App information** page, the name and description are pre-filled from
+the package. Set **Publisher** to `Viio` and click **Next**.
+
+![App information page](images/05-app-information.png)
 
 ## Step 3 — Add the pre-install script with your customer key
 
-On the **Scripts** step, set the following as the **Pre-install script**,
+On the **Program** step, set the following as the **Pre-install script**,
 replacing `YOUR_CUSTOMER_KEY_HERE` with your Viio customer key:
 
 ```bash
@@ -66,6 +71,8 @@ chown root:wheel /etc/viio.conf
 Leave it empty for a fleet-wide rollout; devices can be mapped to employees in
 the Viio platform afterwards.
 
+![Pre-install script on the Program step](images/06-preinstall-script.png)
+
 Optionally, add the following **Post-install script** so Intune reports a
 failure if the agent did not start after installation:
 
@@ -75,25 +82,29 @@ sleep 10
 launchctl print system/io.viio.agent.metalauncher | grep -q "state = running"
 ```
 
-<!-- ![Pre-install and post-install scripts](images/04-scripts.png) -->
-
-## Step 4 — Detection rules and requirements
+## Step 4 — Requirements and detection rules
 
 On the **Requirements** step, set **Minimum operating system** to
 **macOS Monterey 12.0** — the oldest macOS version the agent supports.
 
-Leave the **Detection rules** settings at their defaults. Intune detects the
-app using the package ID (`io.viio.agent`) and version included in the
-`.pkg` file.
+![Minimum operating system on the Requirements step](images/07-requirements-minimum-os.png)
 
-<!-- ![Detection rules](images/05-detection-rules.png) -->
+On the **Detection rules** step, the app bundle ID (`io.viio.agent`) and
+version are pre-filled from the package — leave them as they are.
+
+![Detection rules](images/08-detection-rules.png)
 
 ## Step 5 — Assign the app
 
 On the **Assignments** step, add your target device group under **Required**.
 The agent installs at the next Intune check-in.
 
-<!-- ![Assignments](images/06-assignments.png) -->
+![Assignments](images/09-assignments.png)
+
+Finally, review the settings on the **Review + create** step and click
+**Create**.
+
+![Review and create](images/10-review-and-create.png)
 
 ## Step 6 — Verify the rollout
 

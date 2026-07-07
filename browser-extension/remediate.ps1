@@ -47,32 +47,101 @@ function Get-PolicyPath {
     return "$Root\SOFTWARE\Policies\$($BrowserPath[$Browser])\3rdparty\extensions\$($ExtensionId[$Edition])\policy"
 }
 
+function Write-Diag {
+    param([string]$Message)
+    Write-Output "  [diag] $Message"
+}
+
+# Note: functions that produce a result do so through a [ref] out-param, not by
+# returning it. Diagnostics are written to the Output stream (Write-Diag), so a
+# plain `return $value` would hand the caller the diag lines AND the value as an
+# array. The out-param keeps logging and the result cleanly separated.
 function Resolve-LoggedOnUserSid {
+    param([ref]$Sid)
     $loggedOnUser = (Get-CimInstance -ClassName Win32_ComputerSystem).UserName
+    Write-Diag "Win32_ComputerSystem.UserName: [$loggedOnUser]"
     if (-not $loggedOnUser) {
         throw "Could not determine the logged-on user."
     }
-    return (New-Object System.Security.Principal.NTAccount($loggedOnUser)).Translate(
-             [System.Security.Principal.SecurityIdentifier]).Value
+    $Sid.Value = (New-Object System.Security.Principal.NTAccount($loggedOnUser)).Translate(
+                   [System.Security.Principal.SecurityIdentifier]).Value
+}
+
+function Get-DeviceJoinState {
+    # dsregcmd /status is the authoritative source for Entra/AD join state.
+    # Parse the handful of flags that decide whether AUTO can work at all.
+    try {
+        $status = & dsregcmd /status 2>$null
+    }
+    catch {
+        Write-Diag "dsregcmd /status could not be run: $_"
+        return
+    }
+    if (-not $status) {
+        Write-Diag "dsregcmd /status returned no output."
+        return
+    }
+    foreach ($flag in @("AzureAdJoined", "EnterpriseJoined", "DomainJoined", "WorkplaceJoined")) {
+        $line = $status | Where-Object { $_ -match "^\s*$flag\s*:" } | Select-Object -First 1
+        if ($line) { Write-Diag ("dsregcmd: " + ($line.Trim())) }
+    }
 }
 
 function Resolve-Upn {
-    param([string]$Sid)
+    param([string]$Sid, [ref]$Upn)
     # The AAD\Package\* glob can match multiple subkeys (multiple work/school
     # accounts). Resolve only when there is exactly one distinct UPN; if it is
-    # ambiguous, return $null so the caller fails rather than guessing an email.
-    $upns = @((Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package\*" `
+    # ambiguous, leave $Upn unset so the caller fails rather than guessing an email.
+
+    Write-Diag "Resolving UPN for SID [$Sid]"
+
+    # Is the user's hive actually loaded? If the user is not the active
+    # interactive session, HKEY_USERS\<SID> may be absent and every lookup fails.
+    if (-not (Test-Path "Registry::HKEY_USERS\$Sid")) {
+        Write-Diag "HKEY_USERS\$Sid is NOT loaded (user hive unavailable)."
+        return
+    }
+    Write-Diag "HKEY_USERS\$Sid hive is loaded."
+
+    Get-DeviceJoinState
+
+    # --- Source 1: Entra / WAM (AAD\Package) ---
+    $aadBase = "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package"
+    if (Test-Path $aadBase) {
+        $pkgKeys = @(Get-ChildItem $aadBase -ErrorAction SilentlyContinue)
+        Write-Diag "AAD\Package exists with $($pkgKeys.Count) sub-package key(s)."
+    }
+    else {
+        Write-Diag "AAD\Package path does NOT exist (device likely not Entra joined/registered)."
+    }
+
+    $upns = @((Get-ItemProperty "$aadBase\*" `
               -ErrorAction SilentlyContinue).Username | Where-Object { $_ } | Select-Object -Unique)
+    Write-Diag "AAD\Package Username matches: $($upns.Count) [$($upns -join '; ')]"
+
+    # --- Source 2: Office identity fallback ---
+    if ($upns.Count -eq 0) {
+        $officePath = "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity"
+        if (Test-Path $officePath) {
+            Write-Diag "Office Identity path exists; reading ADUserName."
+        }
+        else {
+            Write-Diag "Office Identity path does NOT exist (Office not signed in with a work account)."
+        }
+        $upns = @((Get-ItemProperty $officePath `
+                  -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -Unique)
+        Write-Diag "Office ADUserName matches: $($upns.Count) [$($upns -join '; ')]"
+    }
 
     if ($upns.Count -eq 0) {
-        $upns = @((Get-ItemProperty "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity" `
-                  -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -Unique)
+        Write-Diag "No UPN found in any source."
+        return
     }
-
-    if ($upns.Count -ne 1) {
-        return $null
+    if ($upns.Count -gt 1) {
+        Write-Diag "Multiple distinct UPNs found - ambiguous, refusing to guess."
+        return
     }
-    return $upns[0]
+    $Upn.Value = $upns[0]
 }
 
 Write-Output "=== REMEDIATION START ==="
@@ -99,12 +168,13 @@ $resolvedEmail = $EmployeeEmail
 
 try {
     if ($setEmployeeEmail -and ($EmployeeEmailScope -eq "HKCU" -or $EmployeeEmail -eq "AUTO")) {
-        $userSid = Resolve-LoggedOnUserSid
+        Resolve-LoggedOnUserSid -Sid ([ref]$userSid)
         Write-Output "Logged-on user SID: [$userSid]"
     }
 
     if ($setEmployeeEmail -and $EmployeeEmail -eq "AUTO") {
-        $resolvedEmail = Resolve-Upn -Sid $userSid
+        $resolvedEmail = $null
+        Resolve-Upn -Sid $userSid -Upn ([ref]$resolvedEmail)
         if (-not $resolvedEmail) {
             Write-Output "Could not resolve employeeEmail from the logged-on user's UPN."
             exit 1

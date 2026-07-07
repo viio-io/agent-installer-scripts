@@ -75,17 +75,9 @@ the Viio platform afterwards.
 
 ![Pre-install script on the Program step](images/06-preinstall-script.png)
 
-Optionally, add the following **Post-install script** so Intune reports a
-failure if the agent did not start after installation:
-
-```bash
-#!/bin/bash
-for _ in 1 2 3 4 5 6; do
-  sleep 5
-  launchctl print system/io.viio.agent.metalauncher 2>/dev/null | grep -q "state = running" && exit 0
-done
-exit 1
-```
+Leave the **Post-install script** empty. Intune ignores its exit code for
+this app type, so it cannot be used to report agent health — use Step 6 to
+verify the rollout instead.
 
 ## Step 4 — Requirements and detection rules
 

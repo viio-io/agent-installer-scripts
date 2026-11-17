@@ -88,50 +88,97 @@ function Get-DeviceJoinState {
     }
 }
 
-function Resolve-Upn {
+function Resolve-UpnFromActiveDirectory {
     param([string]$Sid, [ref]$Upn)
-    # The AAD\Package\* glob can match multiple subkeys (multiple work/school
-    # accounts). Resolve only when there is exactly one distinct UPN; if it is
-    # ambiguous, leave $Upn unset so the caller fails rather than guessing an email.
+    # Bind to the user object in AD by SID and read userPrincipalName / mail.
+    # Works while running as SYSTEM: the bind authenticates as the computer
+    # account. Requires a reachable domain controller; on a workgroup or
+    # off-network device (or a local-account SID) the bind throws and we skip.
+    try {
+        $sidObj = New-Object System.Security.Principal.SecurityIdentifier($Sid)
+        $bytes  = New-Object 'byte[]' $sidObj.BinaryLength
+        $sidObj.GetBinaryForm($bytes, 0)
+        $hex    = ($bytes | ForEach-Object { $_.ToString('x2') }) -join ''
 
-    Write-Diag "Resolving UPN for SID [$Sid]"
+        Write-Diag "Querying Active Directory for <SID=$hex>."
+        $entry  = [ADSI]"LDAP://<SID=$hex>"
+        $adUpn  = [string]$entry.Properties['userPrincipalName'].Value
+        $adMail = [string]$entry.Properties['mail'].Value
+        Write-Diag "AD userPrincipalName: [$adUpn]; mail: [$adMail]"
 
-    # Is the user's hive actually loaded? If the user is not the active
-    # interactive session, HKEY_USERS\<SID> may be absent and every lookup fails.
-    if (-not (Test-Path "Registry::HKEY_USERS\$Sid")) {
-        Write-Diag "HKEY_USERS\$Sid is NOT loaded (user hive unavailable)."
-        return
-    }
-    Write-Diag "HKEY_USERS\$Sid hive is loaded."
-
-    Get-DeviceJoinState
-
-    # --- Source 1: Entra / WAM (AAD\Package) ---
-    $aadBase = "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package"
-    if (Test-Path $aadBase) {
-        $pkgKeys = @(Get-ChildItem $aadBase -ErrorAction SilentlyContinue)
-        Write-Diag "AAD\Package exists with $($pkgKeys.Count) sub-package key(s)."
-    }
-    else {
-        Write-Diag "AAD\Package path does NOT exist (device likely not Entra joined/registered)."
-    }
-
-    $upns = @((Get-ItemProperty "$aadBase\*" `
-              -ErrorAction SilentlyContinue).Username | Where-Object { $_ } | Select-Object -Unique)
-    Write-Diag "AAD\Package Username matches: $($upns.Count) [$($upns -join '; ')]"
-
-    # --- Source 2: Office identity fallback ---
-    if ($upns.Count -eq 0) {
-        $officePath = "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity"
-        if (Test-Path $officePath) {
-            Write-Diag "Office Identity path exists; reading ADUserName."
+        # Prefer the UPN (matches the other sources); fall back to the mail attribute.
+        $resolved = if ($adUpn) { $adUpn } elseif ($adMail) { $adMail } else { $null }
+        if ($resolved) {
+            $Upn.Value = $resolved
         }
         else {
-            Write-Diag "Office Identity path does NOT exist (Office not signed in with a work account)."
+            Write-Diag "AD object found but has no userPrincipalName/mail attribute."
         }
-        $upns = @((Get-ItemProperty $officePath `
-                  -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -Unique)
-        Write-Diag "Office ADUserName matches: $($upns.Count) [$($upns -join '; ')]"
+    }
+    catch {
+        Write-Diag "AD lookup failed (no DC reachable, not domain-joined, or local-account SID): $($_.Exception.Message)"
+    }
+}
+
+function Resolve-Upn {
+    param([string]$Sid, [ref]$Upn)
+    # Resolve the logged-on user's UPN/email from, in priority order:
+    #   1. Entra / WAM (AAD\Package)   - Entra joined or registered devices
+    #   2. Office identity             - Office signed in with a work account
+    #   3. Active Directory (by SID)   - on-prem AD-joined devices (needs a DC)
+    # Sources 1-2 read the user's registry hive; source 3 does not. Resolve only
+    # when exactly one distinct UPN is found; if ambiguous, leave $Upn unset so
+    # the caller fails rather than guessing an email.
+
+    Write-Diag "Resolving UPN for SID [$Sid]"
+    Get-DeviceJoinState
+
+    $upns = @()
+
+    # Registry-based sources require the user's hive to be mounted. If the user
+    # is not the active interactive session, HKEY_USERS\<SID> may be absent - we
+    # skip these sources and still try Active Directory below.
+    if (Test-Path "Registry::HKEY_USERS\$Sid") {
+        Write-Diag "HKEY_USERS\$Sid hive is loaded."
+
+        # --- Source 1: Entra / WAM (AAD\Package) ---
+        # The AAD\Package\* glob can match multiple subkeys (multiple work/school accounts).
+        $aadBase = "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Windows\CurrentVersion\AAD\Package"
+        if (Test-Path $aadBase) {
+            $pkgKeys = @(Get-ChildItem $aadBase -ErrorAction SilentlyContinue)
+            Write-Diag "AAD\Package exists with $($pkgKeys.Count) sub-package key(s)."
+        }
+        else {
+            Write-Diag "AAD\Package path does NOT exist (device likely not Entra joined/registered)."
+        }
+
+        $upns = @((Get-ItemProperty "$aadBase\*" `
+                  -ErrorAction SilentlyContinue).Username | Where-Object { $_ } | Select-Object -Unique)
+        Write-Diag "AAD\Package Username matches: $($upns.Count) [$($upns -join '; ')]"
+
+        # --- Source 2: Office identity fallback ---
+        if ($upns.Count -eq 0) {
+            $officePath = "Registry::HKEY_USERS\$Sid\SOFTWARE\Microsoft\Office\16.0\Common\Identity"
+            if (Test-Path $officePath) {
+                Write-Diag "Office Identity path exists; reading ADUserName."
+            }
+            else {
+                Write-Diag "Office Identity path does NOT exist (Office not signed in with a work account)."
+            }
+            $upns = @((Get-ItemProperty $officePath `
+                      -ErrorAction SilentlyContinue).ADUserName | Where-Object { $_ } | Select-Object -Unique)
+            Write-Diag "Office ADUserName matches: $($upns.Count) [$($upns -join '; ')]"
+        }
+    }
+    else {
+        Write-Diag "HKEY_USERS\$Sid is NOT loaded; skipping registry sources."
+    }
+
+    # --- Source 3: on-prem Active Directory lookup by SID ---
+    if ($upns.Count -eq 0) {
+        $adUpn = $null
+        Resolve-UpnFromActiveDirectory -Sid $Sid -Upn ([ref]$adUpn)
+        if ($adUpn) { $upns = @($adUpn) }
     }
 
     if ($upns.Count -eq 0) {
